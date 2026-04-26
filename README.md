@@ -1,41 +1,53 @@
-# uuc-05_machine_learning
+# Universidad Cristóbal Colón
+## Machine Learning
 
-Descripción del Repositorio
-Este repositorio reúne un conjunto integral de proyectos, prácticas y notas organizadas como una ruta de aprendizaje estructurada en Ciencia de Datos y áreas afines. Abarca desde fundamentos matemáticos hasta aplicaciones avanzadas en inteligencia artificial, finanzas cuantitativas y sistemas inteligentes.
+> Ruta de aprendizaje estructurada en Ciencia de Datos, desde fundamentos matemáticos hasta aplicaciones avanzadas en inteligencia artificial y finanzas cuantitativas.
 
-El objetivo principal es consolidar conocimientos teóricos mediante su implementación práctica en Python, permitiendo el desarrollo progresivo de habilidades en análisis, modelado y toma de decisiones basada en datos.
+---
 
-Ruta de aprendizaje
-El contenido se organiza de manera progresiva, siguiendo una secuencia lógica que facilita la comprensión:
+## 📋 Descripción
 
-Fundamentos matemáticos
+Este repositorio reúne proyectos, prácticas y notas organizados como una secuencia progresiva de aprendizaje. El objetivo es consolidar conocimientos teóricos mediante implementaciones prácticas en Python, desarrollando habilidades en análisis, modelado y toma de decisiones basada en datos.
 
-Álgebra Lineal
-Probabilidad
-Estadística Inferencial
-Cálculo Estocástico
-Análisis y manipulación de datos
+---
 
-Data Manipulation
-SQL
-Ciencia de Datos
-Modelado y aprendizaje automático
+## 🗺️ Ruta de Aprendizaje
 
-Machine Learning
-Neural Networks
-NLP (Procesamiento de Lenguaje Natural)
-Artificial Intelligence
-Aplicaciones avanzadas
+### 1. 📐 Fundamentos Matemáticos
+- Álgebra Lineal
+- Probabilidad
+- Estadística Inferencial
+- Cálculo Estocástico
 
-Series de Tiempo
-Portfolio Theory
-Streamlit (visualización interactiva y dashboards)
-Enfoque
-El repositorio combina:
+### 2. 🗄️ Análisis y Manipulación de Datos
+- Data Manipulation
+- SQL
+- Ciencia de Datos
 
-Fundamentos teóricos rigurosos
-Implementaciones prácticas en Python
-Uso de datos reales y simulaciones
-Desarrollo de proyectos aplicados
-Objetivo
-Proporcionar una visión integral y aplicada del ecosistema de Ciencia de Datos, permitiendo la transición desde conceptos básicos hasta soluciones avanzadas en entornos reales.
+### 3. 🤖 Modelado y Aprendizaje Automático
+- Machine Learning
+- Neural Networks
+- NLP (Procesamiento de Lenguaje Natural)
+- Artificial Intelligence
+
+### 4. 🚀 Aplicaciones Avanzadas
+- Series de Tiempo
+- Portfolio Theory
+- Streamlit — visualización interactiva y dashboards
+
+---
+
+## 🎯 Enfoque
+
+| Pilar | Descripción |
+|---|---|
+| 📚 Teoría rigurosa | Fundamentos matemáticos y estadísticos sólidos |
+| 🐍 Práctica en Python | Implementaciones directas sobre cada concepto |
+| 📊 Datos reales | Uso de datasets reales y simulaciones |
+| 🏗️ Proyectos aplicados | Soluciones orientadas a problemas concretos |
+
+---
+
+## 🏁 Objetivo
+
+Proporcionar una visión integral y aplicada del ecosistema de Ciencia de Datos, facilitando la transición desde conceptos básicos hasta soluciones avanzadas en entornos reales.
