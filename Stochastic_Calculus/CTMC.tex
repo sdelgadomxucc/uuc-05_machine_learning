@@ -1,0 +1,833 @@
+\documentclass{article}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{enumitem}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{mathrsfs}
+\usepackage{mathtools}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\theoremstyle{plain}
+\newtheorem{Teorema}{Teorema}[section]
+\newtheorem{Proposicion}[Teorema]{Proposici\'on}
+\newtheorem{Lema}[Teorema]{Lema}
+\newtheorem{Corolario}[Teorema]{Corolario}
+
+\theoremstyle{definition}
+\newtheorem{Definicion}[Teorema]{Definici\'on}
+\newtheorem{Ejemplo}[Teorema]{Ejemplo}
+\newtheorem{Observacion}[Teorema]{Observaci\'on}
+\newtheorem{Ejercicio}{Ejercicio}[section]
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\A}{\mathbf{A}}
+\newcommand{\I}{\mathbf{I}}
+\newcommand{\p}{\mathbf{p}}
+\newcommand{\PP}{\mathbf{P}}
+\newcommand{\ind}{\mathbf{1}}  % Fixed: was \1 which is invalid
+
+\title{Cadenas de Markov en Tiempo Continuo}
+\author{Gal}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Propiedades Fundamentales de las Distribuciones Exponenciales}
+
+\begin{Definicion}
+  Sean $T_1, \ldots, T_n$ variables aleatorias independientes con distribuci\'on exponencial de par\'ametros $b_1, \ldots, b_n$ respectivamente. Definimos
+  \[ T = \min\{T_1, \ldots, T_n\}. \]
+  Interpretamos $T_i$ como el momento en que suena el reloj $i$.
+\end{Definicion}
+
+\begin{Teorema}
+  La variable aleatoria $T$ tiene distribuci\'on exponencial con par\'ametro $b_1 + \cdots + b_n$.
+\end{Teorema}
+
+\begin{proof}
+  Calculamos la funci\'on de supervivencia:
+  \[
+  \Prob\{T \geq t\} = \Prob\{T_1 \geq t, \ldots, T_n \geq t\}.
+  \]
+  Por independencia:
+  \[
+  \Prob\{T \geq t\} = \prod_{i=1}^n \Prob\{T_i \geq t\}.
+  \]
+  Cada $T_i$ es exponencial de par\'ametro $b_i$, por lo que $\Prob\{T_i \geq t\} = e^{-b_i t}$. Sustituyendo:
+  \[
+  \Prob\{T \geq t\} = \prod_{i=1}^n e^{-b_i t} = e^{-(b_1 + \cdots + b_n)t}.
+  \]
+  Esta es precisamente la funci\'on de supervivencia de una variable exponencial con par\'ametro $\sum_{i=1}^n b_i$.
+\end{proof}
+
+\begin{Teorema}
+  La probabilidad de que el reloj $i$ sea el primero en sonar es
+  \[ \Prob\{T_i = T\} = \frac{b_i}{b_1 + \cdots + b_n}. \]
+\end{Teorema}
+
+\begin{proof}
+  Condicionamos en el valor de $T_i$. Sea $f_{T_i}(t) = b_i e^{-b_i t}$ la densidad de $T_i$. Entonces:
+  \[
+  \Prob\{T_i = T\} = \int_0^\infty \Prob\{T_j > t \text{ para todo } j \neq i \mid T_i = t\} \, f_{T_i}(t) \, dt.
+  \]
+  Por independencia, condicionar en $T_i = t$ no afecta a los otros $T_j$:
+  \[
+  \Prob\{T_j > t \text{ para todo } j \neq i \mid T_i = t\} = \prod_{j \neq i} \Prob\{T_j > t\} = \prod_{j \neq i} e^{-b_j t} = e^{-(b_1 + \cdots + b_{i-1} + b_{i+1} + \cdots + b_n)t}.
+  \]
+  Por tanto:
+  \[
+  \Prob\{T_i = T\} = \int_0^\infty e^{-(b_1 + \cdots + b_{i-1} + b_{i+1} + \cdots + b_n)t} \cdot b_i e^{-b_i t} \, dt = b_i \int_0^\infty e^{-(b_1 + \cdots + b_n)t} \, dt.
+  \]
+  La integral es $\int_0^\infty e^{-Bt} \, dt = 1/B$ con $B = b_1 + \cdots + b_n$. Por tanto:
+  \[
+  \Prob\{T_i = T\} = \frac{b_i}{b_1 + \cdots + b_n}.
+  \]
+\end{proof}
+
+\section{Cadenas de Markov en Tiempo Continuo}
+
+\begin{Definicion}
+  Sea $S$ un espacio de estados finito. Un proceso en tiempo continuo $\{X_t\}_{t \geq 0}$ con valores en $S$ es una \textbf{cadena de Markov en tiempo continuo} si satisface:
+  \begin{enumerate}
+    \item \textbf{Propiedad de Markov:} Para todo $t > s$,
+    \[ \Prob\{X_t = y \mid X_r, 0 \leq r \leq s\} = \Prob\{X_t = y \mid X_s\}. \]
+    \item \textbf{Homogeneidad en el tiempo:} Para todo $t > s$,
+    \[ \Prob\{X_t = y \mid X_s = x\} = \Prob\{X_{t-s} = y \mid X_0 = x\}. \]
+  \end{enumerate}
+\end{Definicion}
+
+\begin{Definicion}
+  Para cada par de estados $x, y \in S$ con $x \neq y$, asignamos un n\'umero no negativo $\alpha(x,y)$ llamado \textbf{tasa de transici\'on} de $x$ a $y$. Definimos la \textbf{tasa total de salida} del estado $x$ como
+  \[ \alpha(x) = \sum_{y \neq x} \alpha(x,y). \]
+\end{Definicion}
+
+\begin{Definicion}
+  La cadena de Markov en tiempo continuo con tasas $\alpha$ satisface las siguientes probabilidades infinitesimales:
+  \begin{align}
+    \Prob\{X_{t+\Delta t} = x \mid X_t = x\} &= 1 - \alpha(x)\Delta t + o(\Delta t), \label{eq:stay}\\
+    \Prob\{X_{t+\Delta t} = y \mid X_t = x\} &= \alpha(x,y)\Delta t + o(\Delta t), \quad y \neq x. \label{eq:jump}
+  \end{align}
+  Aqu\'i $o(\Delta t)$ denota una funci\'on tal que $\lim_{\Delta t \to 0} o(\Delta t)/\Delta t = 0$.
+\end{Definicion}
+
+\subsection{Ecuaciones Diferenciales y el Generador Infinitesimal}
+
+\begin{Definicion}
+  Sea $p_x(t) = \Prob\{X_t = x\}$.
+\end{Definicion}
+
+\begin{Proposicion}
+  Las probabilidades $p_x(t)$ satisfacen el sistema de ecuaciones diferenciales:
+  \[ p_x'(t) = -\alpha(x)p_x(t) + \sum_{y \neq x} \alpha(y,x)p_y(t). \]
+\end{Proposicion}
+
+\begin{proof}
+  Consideramos $p_x(t+\Delta t)$ y condicionamos en el estado en tiempo $t$:
+  \[
+  p_x(t+\Delta t) = \sum_{y \in S} \Prob\{X_t = y\} \Prob\{X_{t+\Delta t} = x \mid X_t = y\}.
+  \]
+  Usando las probabilidades infinitesimales \eqref{eq:stay} y \eqref{eq:jump}:
+  \begin{align*}
+    p_x(t+\Delta t) &= p_x(t)(1 - \alpha(x)\Delta t + o(\Delta t)) + \sum_{y \neq x} p_y(t)(\alpha(y,x)\Delta t + o(\Delta t)) \\
+    &= p_x(t) - \alpha(x)p_x(t)\Delta t + \sum_{y \neq x} \alpha(y,x)p_y(t)\Delta t + p_x(t)o(\Delta t) + \sum_{y \neq x} p_y(t)o(\Delta t).
+  \end{align*}
+  Reordenamos:
+  \[
+  \frac{p_x(t+\Delta t) - p_x(t)}{\Delta t} = -\alpha(x)p_x(t) + \sum_{y \neq x} \alpha(y,x)p_y(t) + \frac{o(\Delta t)}{\Delta t}\left(p_x(t) + \sum_{y \neq x} p_y(t)\right).
+  \]
+  El \'ultimo t\'ermino tiende a 0 cuando $\Delta t \to 0$ porque $o(\Delta t)/\Delta t \to 0$ y la suma de probabilidades es finita. Por tanto, tomando el l\'imite:
+  \[
+  p_x'(t) = \lim_{\Delta t \to 0} \frac{p_x(t+\Delta t) - p_x(t)}{\Delta t} = -\alpha(x)p_x(t) + \sum_{y \neq x} \alpha(y,x)p_y(t).
+  \]
+\end{proof}
+
+\begin{Definicion}
+  La \textbf{matriz generadora infinitesimal} $\A$ de la cadena tiene entradas:
+  \[ \A(x,y) = \begin{cases}
+    \alpha(x,y) & \text{si } x \neq y,\\
+    -\alpha(x) & \text{si } x = y.
+  \end{cases} \]
+\end{Definicion}
+
+\begin{Observacion}
+  Las filas de $\A$ suman cero porque:
+  \[ \sum_{y \in S} \A(x,y) = -\alpha(x) + \sum_{y \neq x} \alpha(x,y) = -\alpha(x) + \alpha(x) = 0. \]
+  Adem\'as, las entradas no diagonales son no negativas y las diagonales son no positivas.
+\end{Observacion}
+
+\begin{Proposicion}
+  Sea $\p(t)$ el vector fila de probabilidades, es decir, $\p(t) = (p_x(t))_{x \in S}$. Entonces
+  \[ \p'(t) = \p(t)\A. \]
+\end{Proposicion}
+
+\begin{proof}
+  La componente $x$ de $\p(t)\A$ es:
+  \[ (\p(t)\A)_x = \sum_{y \in S} p_y(t) \A(y,x) = p_x(t)\A(x,x) + \sum_{y \neq x} p_y(t) \A(y,x). \]
+  Sustituyendo $\A(x,x) = -\alpha(x)$ y $\A(y,x) = \alpha(y,x)$ para $y \neq x$:
+  \[ (\p(t)\A)_x = -p_x(t)\alpha(x) + \sum_{y \neq x} p_y(t)\alpha(y,x) = p_x'(t). \]
+\end{proof}
+
+\begin{Teorema}
+  La soluci\'on del sistema $\p'(t) = \p(t)\A$ con condici\'on inicial $\p(0)$ es
+  \[ \p(t) = \p(0)e^{t\A}, \]
+  donde $e^{t\A} = \sum_{n=0}^\infty \frac{(t\A)^n}{n!}$ es la exponencial de matrices.
+\end{Teorema}
+
+\begin{proof}
+  Verificamos que $\p(t) = \p(0)e^{t\A}$ satisface la ecuaci\'on diferencial:
+  \[ \frac{d}{dt} \p(t) = \p(0) \frac{d}{dt} e^{t\A} = \p(0) \A e^{t\A} = (\p(0)e^{t\A}) \A = \p(t) \A. \]
+  La condici\'on inicial se cumple porque $e^{0\A} = \I$.
+\end{proof}
+
+\begin{Definicion}
+  Sea $\PP_t$ la matriz de transici\'on con entradas $p_t(x,y) = \Prob\{X_t = y \mid X_0 = x\}$.
+\end{Definicion}
+
+\begin{Proposicion}
+  La matriz $\PP_t$ satisface la ecuaci\'on matricial
+  \[ \frac{d}{dt} \PP_t = \PP_t \A, \quad \PP_0 = \I, \]
+  y por tanto $\PP_t = e^{t\A}$.
+\end{Proposicion}
+
+\begin{proof}
+  Fijamos $x$ y consideramos el vector $\p(t) = (\PP_t(x,\cdot))$, es decir, la fila $x$ de $\PP_t$. Por definici\'on, $\p(t)$ son las probabilidades condicionadas a $X_0 = x$, por lo que satisfacen $\p'(t) = \p(t)\A$. Esto es precisamente la fila $x$ de la ecuaci\'on $\frac{d}{dt}\PP_t = \PP_t\A$. La condici\'on inicial $\PP_0 = \I$ se cumple porque $p_0(x,y) = \delta_{xy}$.
+\end{proof}
+
+\begin{Ejemplo}[Cadena de dos estados]
+  Consideremos una cadena con estados $\{0,1\}$, tasas $\alpha(0,1) = 1$, $\alpha(1,0) = 2$. El generador infinitesimal es
+  \[ \A = \begin{pmatrix}
+    -1 & 1 \\
+    2 & -2
+  \end{pmatrix}. \]
+  Para calcular $e^{t\A}$, diagonalizamos la matriz. Los eigenvalores satisfacen:
+  \[ \det(\A - \lambda \I) = \det\begin{pmatrix}
+    -1-\lambda & 1 \\
+    2 & -2-\lambda
+  \end{pmatrix} = (-1-\lambda)(-2-\lambda) - 2 = \lambda^2 + 3\lambda = \lambda(\lambda+3) = 0. \]
+  Por tanto, $\lambda_1 = 0$, $\lambda_2 = -3$.
+  
+  Para $\lambda = 0$, buscamos un eigenvector derecho $\A v = 0$:
+  \[ \begin{pmatrix}
+    -1 & 1 \\
+    2 & -2
+  \end{pmatrix} \begin{pmatrix} v_1 \\ v_2 \end{pmatrix} = \begin{pmatrix} 0 \\ 0 \end{pmatrix} \Rightarrow -v_1 + v_2 = 0 \Rightarrow v_2 = v_1. \]
+  Tomamos $v = (1,1)^T$.
+  
+  Para $\lambda = -3$, resolvemos $(\A + 3\I)v = 0$:
+  \[ \begin{pmatrix}
+    2 & 1 \\
+    2 & 1
+  \end{pmatrix} \begin{pmatrix} v_1 \\ v_2 \end{pmatrix} = \begin{pmatrix} 0 \\ 0 \end{pmatrix} \Rightarrow 2v_1 + v_2 = 0 \Rightarrow v_2 = -2v_1. \]
+  Tomamos $v = (1,-2)^T$.
+  
+  Construimos $Q = \begin{pmatrix} 1 & 1 \\ 1 & -2 \end{pmatrix}$ (eigenvectores como columnas). Entonces:
+  \[ Q^{-1} = \frac{1}{\det(Q)} \begin{pmatrix} -2 & -1 \\ -1 & 1 \end{pmatrix} = -\frac{1}{3} \begin{pmatrix} -2 & -1 \\ -1 & 1 \end{pmatrix} = \frac{1}{3}\begin{pmatrix} 2 & 1 \\ 1 & -1 \end{pmatrix}. \]
+  
+  Verificamos que $Q^{-1} \A Q = D = \begin{pmatrix} 0 & 0 \\ 0 & -3 \end{pmatrix}$.
+  
+  Entonces:
+  \[ e^{t\A} = Q e^{tD} Q^{-1} = Q \begin{pmatrix} 1 & 0 \\ 0 & e^{-3t} \end{pmatrix} Q^{-1}. \]
+  
+  Calculamos:
+  \begin{align*}
+    e^{t\A} &= \begin{pmatrix} 1 & 1 \\ 1 & -2 \end{pmatrix} \begin{pmatrix} 1 & 0 \\ 0 & e^{-3t} \end{pmatrix} \cdot \frac{1}{3}\begin{pmatrix} 2 & 1 \\ 1 & -1 \end{pmatrix} \\
+    &= \frac{1}{3} \begin{pmatrix} 1 & e^{-3t} \\ 1 & -2e^{-3t} \end{pmatrix} \begin{pmatrix} 2 & 1 \\ 1 & -1 \end{pmatrix} \\
+    &= \frac{1}{3} \begin{pmatrix}
+      2 + e^{-3t} & 1 - e^{-3t} \\
+      2 - 2e^{-3t} & 1 + 2e^{-3t}
+    \end{pmatrix}.
+  \end{align*}
+  
+  Podemos reescribir como:
+  \[ \PP_t = \begin{pmatrix} \frac{2}{3} & \frac{1}{3} \\ \frac{2}{3} & \frac{1}{3} \end{pmatrix} + e^{-3t} \begin{pmatrix} \frac{1}{3} & -\frac{1}{3} \\ -\frac{2}{3} & \frac{2}{3} \end{pmatrix}. \]
+  
+  Observamos que $\lim_{t\to\infty} \PP_t = \begin{pmatrix} 2/3 & 1/3 \\ 2/3 & 1/3 \end{pmatrix}$. La distribuci\'on l\'imite es $\pi = (2/3, 1/3)$, que satisface $\pi \A = 0$:
+  \[ \pi \A = \begin{pmatrix} \frac{2}{3} & \frac{1}{3} \end{pmatrix} \begin{pmatrix} -1 & 1 \\ 2 & -2 \end{pmatrix} = \begin{pmatrix} -\frac{2}{3} + \frac{2}{3} & \frac{2}{3} - \frac{2}{3} \end{pmatrix} = \begin{pmatrix} 0 & 0 \end{pmatrix}. \]
+\end{Ejemplo}
+
+\begin{Ejemplo}[Cadena de cuatro estados simétrica]
+  Consideremos una cadena con estados $\{0,1,2,3\}$ y generador
+  \[ \A = \begin{pmatrix}
+    -3 & 1 & 1 & 1 \\
+    2 & -4 & 1 & 1 \\
+    2 & 1 & -4 & 1 \\
+    1 & 1 & 1 & -3
+  \end{pmatrix}. \]
+  
+  Para encontrar los eigenvalores, observamos que la matriz tiene estructura de bloque. Podemos encontrar un eigenvector $(1,1,1,1)$ con eigenvalor 0 porque la suma de filas es 0. Por simetr\'ia, buscamos vectores de la forma $(1,0,-1/2,-1/2)$, $(0,0,-1/2,1/2)$ y $(-1/3,1,-1/3,1/3)$. Estos son linealmente independientes y se puede verificar que son eigenvectores con eigenvalores $-1$, $-3$ y $-4$ respectivamente.
+  
+  La matriz $Q$ de eigenvectores es:
+  \[ Q = \begin{pmatrix}
+    1 & 1 & 0 & -1/3 \\
+    1 & 0 & 0 & 1 \\
+    1 & -1/2 & -1/2 & -1/3 \\
+    1 & -1/2 & 1/2 & 1/3
+  \end{pmatrix}. \]
+  
+  Entonces $D = Q^{-1}\A Q = \begin{pmatrix}
+    0 & 0 & 0 & 0 \\
+    0 & -1 & 0 & 0 \\
+    0 & 0 & -3 & 0 \\
+    0 & 0 & 0 & -4
+  \end{pmatrix}$.
+  
+  Por tanto:
+  \[ \PP_t = e^{t\A} = Q e^{tD} Q^{-1} = Q \begin{pmatrix}
+    1 & 0 & 0 & 0 \\
+    0 & e^{-t} & 0 & 0 \\
+    0 & 0 & e^{-3t} & 0 \\
+    0 & 0 & 0 & e^{-4t}
+  \end{pmatrix} Q^{-1}. \]
+  
+  La distribuci\'on estacionaria $\pi$ satisface $\pi\A = 0$. Resolviendo el sistema:
+  \begin{align*}
+    -3\pi_0 + 2\pi_1 + 2\pi_2 + \pi_3 &= 0 \\
+    \pi_0 - 4\pi_1 + \pi_2 + \pi_3 &= 0 \\
+    \pi_0 + \pi_1 - 4\pi_2 + \pi_3 &= 0 \\
+    \pi_0 + \pi_1 + \pi_2 - 3\pi_3 &= 0 \\
+    \pi_0 + \pi_1 + \pi_2 + \pi_3 &= 1
+  \end{align*}
+  
+  Por simetr\'ia, $\pi_1 = \pi_2$. Sea $\pi_1 = \pi_2 = a$, $\pi_0 = b$, $\pi_3 = c$. De la segunda ecuaci\'on: $b - 4a + a + c = 0 \Rightarrow b - 3a + c = 0$. De la cuarta: $b + a + a - 3c = 0 \Rightarrow b + 2a - 3c = 0$. Restando: $(b+2a-3c) - (b-3a+c) = 0 \Rightarrow 5a - 4c = 0 \Rightarrow c = 5a/4$. Sustituyendo en $b - 3a + 5a/4 = 0 \Rightarrow b - 12a/4 + 5a/4 = 0 \Rightarrow b = 7a/4$. Normalizaci\'on: $b + a + a + c = 7a/4 + a + a + 5a/4 = (7a+4a+4a+5a)/4 = 20a/4 = 5a = 1 \Rightarrow a = 1/5$. Por tanto:
+  \[ \pi = \left(\frac{7}{20}, \frac{1}{5}, \frac{1}{5}, \frac{1}{4}\right) = \left(\frac{7}{20}, \frac{4}{20}, \frac{4}{20}, \frac{5}{20}\right). \]
+\end{Ejemplo}
+
+\subsection{Interpretaci\'on mediante Tiempos de Espera Exponenciales}
+
+\begin{Teorema}
+  Sea $X_0 = x$ y definamos $T = \inf\{t: X_t \neq x\}$, el tiempo hasta el primer cambio de estado. Entonces $T$ tiene distribuci\'on exponencial con par\'ametro $\alpha(x)$.
+\end{Teorema}
+
+\begin{proof}
+  Para cualquier $s, t \geq 0$, por la propiedad de Markov y la homogeneidad:
+  \[ \Prob\{T > s+t \mid T > s\} = \Prob\{T > t\}. \]
+  Esto es la propiedad de p\'erdida de memoria, que caracteriza a la distribuci\'on exponencial. Adem\'as, de \eqref{eq:stay} tenemos:
+  \[ \Prob\{T \leq \Delta t\} = 1 - \Prob\{T > \Delta t\} = 1 - (1 - \alpha(x)\Delta t + o(\Delta t)) = \alpha(x)\Delta t + o(\Delta t). \]
+  Esto implica que la tasa es $\alpha(x)$. M\'as formalmente, sea $F(t) = \Prob\{T > t\}$. Entonces $F(s+t) = F(s)F(t)$ para todo $s,t \geq 0$, y $F$ es continua por la derecha (de hecho, continua). La \'unica soluci\'on con $F(0)=1$ es $F(t) = e^{-\lambda t}$ para alg\'un $\lambda \geq 0$. De $\Prob\{T \leq \Delta t\} = \lambda \Delta t + o(\Delta t)$, obtenemos $\lambda = \alpha(x)$.
+\end{proof}
+
+\begin{Teorema}
+  Condicionado a que el primer salto ocurre en tiempo $T$, la probabilidad de que la cadena salte al estado $y \neq x$ es
+  \[ \Prob\{X_T = y\} = \frac{\alpha(x,y)}{\alpha(x)}. \]
+\end{Teorema}
+
+\begin{proof}
+  Consideramos un intervalo peque\~no $[t, t+\Delta t]$ y aplicamos \eqref{eq:jump}:
+  \[ \Prob\{X_{t+\Delta t} = y, X_s = x \text{ para } s \in [0,t] \mid X_0 = x\} = e^{-\alpha(x)t} \cdot \alpha(x,y)\Delta t + o(\Delta t). \]
+  Esto se debe a que la probabilidad de no haber saltado hasta $t$ es $e^{-\alpha(x)t}$, y en el intervalo $[t,t+\Delta t]$ la probabilidad de saltar a $y$ es aproximadamente $\alpha(x,y)\Delta t$, con independencia aproximada.
+
+  La probabilidad de que el primer salto ocurra en $[t, t+\Delta t]$ (sin especificar destino) es:
+  \[ \Prob\{T \in [t,t+\Delta t]\} = e^{-\alpha(x)t}\alpha(x)\Delta t + o(\Delta t). \]
+
+  Por tanto, la probabilidad condicionada es:
+  \[ \Prob\{X_T = y \mid T \in [t,t+\Delta t]\} = \frac{e^{-\alpha(x)t}\alpha(x,y)\Delta t + o(\Delta t)}{e^{-\alpha(x)t}\alpha(x)\Delta t + o(\Delta t)} \xrightarrow{\Delta t \to 0} \frac{\alpha(x,y)}{\alpha(x)}. \]
+  Esto es independiente de $t$, como debe ser.
+\end{proof}
+
+\begin{Observacion}[Interpretaci\'on de los relojes]
+  Podemos pensar que en cada estado $y \neq x$ colocamos un "reloj" independiente que suena en un tiempo exponencial con tasa $\alpha(x,y)$. La cadena permanece en $x$ hasta que el primer reloj suena, y entonces se mueve al estado correspondiente. Esta interpretaci\'on es consistente con los teoremas anteriores.
+\end{Observacion}
+
+\subsection{Comportamiento Asint\'otico y Distribuci\'on Estacionaria}
+
+\begin{Definicion}
+  Una cadena en tiempo continuo es \textbf{irreducible} si todos los estados se comunican, es decir, para cada $x, y \in S$ existe una secuencia $z_1, \ldots, z_j$ tal que
+  \[ \alpha(x,z_1), \alpha(z_1,z_2), \ldots, \alpha(z_{j-1},z_j), \alpha(z_j,y) > 0. \]
+\end{Definicion}
+
+\begin{Lema}
+  Sea $\A$ el generador infinitesimal de una cadena irreducible en tiempo continuo con espacio de estados finito. Sea $a > \max_x \alpha(x)$. Entonces la matriz $P = \frac{1}{a}\A + \I$ es una matriz estoc\'astica (sus filas suman 1 y todas sus entradas son no negativas) irreducible y aperi\'odica.
+\end{Lema}
+
+\begin{proof}
+  Para cualquier $x$, la suma de la fila $x$ de $P$ es:
+  \[ \sum_y P(x,y) = \frac{1}{a}\sum_y \A(x,y) + \sum_y \delta_{xy} = \frac{1}{a}\cdot 0 + 1 = 1. \]
+  Las entradas no diagonales son $P(x,y) = \frac{1}{a}\alpha(x,y) \geq 0$ para $x \neq y$. La entrada diagonal es $P(x,x) = 1 - \frac{\alpha(x)}{a} \geq 0$ porque $a > \alpha(x)$. Por tanto, $P$ es estoc\'astica.
+
+  La irreducibilidad se conserva porque $\alpha(x,y) > 0$ implica $P(x,y) > 0$. Adem\'as, $P(x,x) > 0$ para alg\'un $x$ (de hecho, para todos porque $a > \alpha(x)$), lo que implica que la cadena en tiempo discreto es aperi\'odica.
+\end{proof}
+
+\begin{Teorema}
+  Para una cadena irreducible en tiempo continuo con espacio de estados finito, existe una \'unica distribuci\'on de probabilidad $\pi$ tal que
+  \[ \lim_{t\to\infty} \PP_t = \ind\pi, \]
+  donde $\ind\pi$ es la matriz con todas las filas iguales a $\pi$. La distribuci\'on $\pi$ satisface
+  \[ \pi \A = \mathbf{0}. \]
+  Adem\'as, todos los dem\'as eigenvalores de $\A$ tienen parte real negativa.
+\end{Teorema}
+
+\begin{proof}
+  Elegimos $a > \max_x \alpha(x)$ y definimos $P = \frac{1}{a}\A + \I$. Por el Lema, $P$ es una matriz estoc\'astica irreducible y aperi\'odica. Por la teor\'ia de cadenas de Markov en tiempo discreto, existe una \'unica distribuci\'on estacionaria $\pi$ tal que $\pi P = \pi$ y $\lim_{n\to\infty} P^n = \ind\pi$.
+
+  De $P = \frac{1}{a}\A + \I$, obtenemos:
+  \[ \pi P = \pi \Rightarrow \pi\left(\frac{1}{a}\A + \I\right) = \pi \Rightarrow \frac{1}{a}\pi\A + \pi = \pi \Rightarrow \pi\A = 0. \]
+
+  Ahora, para la convergencia en tiempo continuo, observamos que $\PP_t = e^{t\A}$. Podemos escribir $\A$ en t\'erminos de $P$: $\A = a(P - \I)$. Entonces:
+  \[ \PP_t = e^{t a(P - \I)} = e^{-a t} e^{a t P}. \]
+
+  Descomponemos $P$ en sus eigenvalores. Como $P$ es estoc\'astica irreducible y aperi\'odica, tiene eigenvalor 1 con eigenvector derecho $\ind$ y eigenvector izquierdo $\pi$. Los dem\'as eigenvalores $\mu$ satisfacen $|\mu| < 1$. Por tanto, los eigenvalores de $\A$ son $\lambda = a(\mu - 1)$. Para $\mu = 1$, obtenemos $\lambda = 0$. Para $|\mu| < 1$, tenemos $\operatorname{Re}(\lambda) = a(\operatorname{Re}(\mu) - 1) < 0$ porque $\operatorname{Re}(\mu) < 1$.
+
+  La descomposici\'on espectral nos da:
+  \[ \PP_t = \ind\pi + \sum_{\lambda \neq 0} e^{\lambda t} \text{(t\'erminos de proyecci\'on)}. \]
+  Como $\operatorname{Re}(\lambda) < 0$ para $\lambda \neq 0$, estos t\'erminos tienden a 0 cuando $t \to \infty$. Por tanto, $\lim_{t\to\infty} \PP_t = \ind\pi$.
+\end{proof}
+
+\begin{Observacion}
+  En tiempo continuo no existe el fen\'omeno de periodicidad. Para cualquier cadena irreducible en tiempo continuo, $\PP_t$ tiene todas sus entradas estrictamente positivas para todo $t > 0$.
+\end{Observacion}
+
+\begin{proof}
+  Por irreducibilidad, para cualquier par de estados $i, j$, existe un camino $i = x_0, x_1, \ldots, x_n = j$ con tasas positivas $\alpha(x_k, x_{k+1}) > 0$. Podemos elegir tiempos $0 < t_1 < t_2 < \cdots < t_n = t$. La probabilidad de seguir este camino con saltos exactamente en esos tiempos es:
+  \[ e^{-\alpha(x_0)t_1} \cdot \alpha(x_0,x_1) \cdot e^{-\alpha(x_1)(t_2-t_1)} \cdot \alpha(x_1,x_2) \cdots e^{-\alpha(x_{n-1})(t_n-t_{n-1})} > 0. \]
+  Integrando sobre todas las posibles secuencias de tiempos de salto que suman $t$, obtenemos $p_t(i,j) > 0$.
+\end{proof}
+
+\subsection{Tiempos Medios de Paso}
+
+\begin{Definicion}
+  Sea $z$ un estado fijo. Definimos el \textbf{tiempo medio de paso} a $z$ comenzando en $x$ como
+  \[ b(x) = \E(Y \mid X_0 = x), \quad \text{donde } Y = \inf\{t: X_t = z\}. \]
+  Claramente $b(z) = 0$.
+\end{Definicion}
+
+\begin{Teorema}
+  Para $x \neq z$, la funci\'on $b(x)$ satisface
+  \[ \alpha(x)b(x) = 1 + \sum_{y \neq x, z} \alpha(x,y) b(y). \]
+\end{Teorema}
+
+\begin{proof}
+  Condicionamos en el primer tiempo de salto $T$ desde $x$. Sea $Y$ el tiempo de primera llegada a $z$. Entonces:
+  \[ Y = T + Y' \]
+  donde $Y'$ es el tiempo restante despu\'es del primer salto. Por la propiedad de Markov, condicionado en $X_T = y$, $Y'$ tiene la misma distribuci\'on que $Y$ comenzando en $y$ (por la homogeneidad temporal). Por tanto:
+  \[ \E(Y \mid X_0 = x) = \E(T \mid X_0 = x) + \sum_{y \in S} \Prob\{X_T = y \mid X_0 = x\} \E(Y \mid X_0 = y). \]
+
+  Sabemos que $\E(T \mid X_0 = x) = 1/\alpha(x)$ porque $T \sim \operatorname{Exp}(\alpha(x))$. Tambi\'en $\Prob\{X_T = y \mid X_0 = x\} = \alpha(x,y)/\alpha(x)$ para $y \neq x$, y $\Prob\{X_T = x \mid X_0 = x\} = 0$ (casi seguramente la cadena cambia de estado).
+
+  Sustituyendo:
+  \[ b(x) = \frac{1}{\alpha(x)} + \sum_{y \neq x} \frac{\alpha(x,y)}{\alpha(x)} b(y). \]
+
+  Separamos la suma en $y = z$ y $y \neq z$:
+  \[ b(x) = \frac{1}{\alpha(x)} + \frac{\alpha(x,z)}{\alpha(x)} b(z) + \sum_{y \neq x, z} \frac{\alpha(x,y)}{\alpha(x)} b(y). \]
+
+  Como $b(z) = 0$, obtenemos:
+  \[ b(x) = \frac{1}{\alpha(x)} + \sum_{y \neq x, z} \frac{\alpha(x,y)}{\alpha(x)} b(y). \]
+
+  Multiplicando ambos lados por $\alpha(x)$:
+  \[ \alpha(x) b(x) = 1 + \sum_{y \neq x, z} \alpha(x,y) b(y). \]
+\end{proof}
+
+\begin{Corolario}
+  Sea $\tilde{\A}$ la matriz obtenida de $\A$ eliminando la fila y columna correspondientes al estado $z$. Sea $\bar{b}$ el vector de tiempos medios de paso para los estados $x \neq z$, y $\bar{1}$ el vector de unos. Entonces
+  \[ \tilde{\A} \bar{b} = -\bar{1}, \]
+  y por tanto
+  \[ \bar{b} = [-\tilde{\A}]^{-1} \bar{1}. \]
+\end{Corolario}
+
+\begin{proof}
+  Para $x \neq z$, la ecuaci\'on $\alpha(x) b(x) = 1 + \sum_{y \neq x, z} \alpha(x,y) b(y)$ se puede reescribir como:
+  \[ -\alpha(x) b(x) + \sum_{y \neq x, z} \alpha(x,y) b(y) = -1. \]
+
+  El lado izquierdo es precisamente la componente $x$ de $\tilde{\A} \bar{b}$, porque $\tilde{\A}(x,x) = -\alpha(x)$ y $\tilde{\A}(x,y) = \alpha(x,y)$ para $y \neq x$. Por tanto:
+  \[ (\tilde{\A} \bar{b})_x = -1 \quad \text{para todo } x \neq z. \]
+
+  Esto es $\tilde{\A} \bar{b} = -\bar{1}$. Como la cadena es irreducible, $\tilde{\A}$ es invertible (todos sus eigenvalores tienen parte real negativa), por lo que $\bar{b} = -\tilde{\A}^{-1}\bar{1} = [-\tilde{\A}]^{-1}\bar{1}$.
+\end{proof}
+
+\begin{Ejemplo}[C\'alculo de tiempo medio de paso]
+  Para la cadena del Ejemplo anterior (la de cuatro estados), calculemos el tiempo esperado para llegar del estado 0 al estado 3. Tenemos $z = 3$, y la matriz $\tilde{\A}$ es:
+  \[ \tilde{\A} = \begin{pmatrix}
+    -3 & 1 & 1 \\
+    2 & -4 & 1 \\
+    2 & 1 & -4
+  \end{pmatrix}. \]
+
+  Calculamos $-\tilde{\A}$ y resolvemos $-\tilde{\A} \bar{b} = \bar{1}$:
+  \[ \begin{cases}
+    3b_0 - b_1 - b_2 = 1 \\
+    -2b_0 + 4b_1 - b_2 = 1 \\
+    -2b_0 - b_1 + 4b_2 = 1
+  \end{cases} \]
+
+  De la primera ecuaci\'on: $b_1 = 3b_0 - b_2 - 1$.
+  Sustituyendo en la segunda: $-2b_0 + 4(3b_0 - b_2 - 1) - b_2 = 1 \Rightarrow -2b_0 + 12b_0 - 4b_2 - 4 - b_2 = 1 \Rightarrow 10b_0 - 5b_2 = 5 \Rightarrow 2b_0 - b_2 = 1 \Rightarrow b_2 = 2b_0 - 1$.
+
+  Sustituyendo en la tercera: $-2b_0 - (2b_0 - 1) + 4(2b_0 - 1) = 1 \Rightarrow -2b_0 - 2b_0 + 1 + 8b_0 - 4 = 1 \Rightarrow 4b_0 - 3 = 1 \Rightarrow 4b_0 = 4 \Rightarrow b_0 = 1$.
+
+  Entonces $b_2 = 2\cdot 1 - 1 = 1$, y $b_1 = 3\cdot 1 - 1 - 1 = 1$.
+
+  Por tanto, $\bar{b} = (1,1,1)^T$. El tiempo esperado del estado 0 al estado 3 es 1.
+\end{Ejemplo}
+
+\section{Procesos de Nacimiento y Muerte}
+
+\begin{Definicion}
+  Un \textbf{proceso de nacimiento y muerte} es una cadena de Markov en tiempo continuo con espacio de estados $\{0,1,2,\ldots\}$ donde los \'unicos cambios posibles son de $n$ a $n+1$ (nacimiento) o de $n$ a $n-1$ (muerte). Definimos:
+  \begin{itemize}
+    \item Tasas de nacimiento: $\lambda_n \geq 0$, $n = 0,1,2,\ldots$
+    \item Tasas de muerte: $\mu_n \geq 0$, $n = 1,2,3,\ldots$, con $\mu_0 = 0$.
+  \end{itemize}
+  Las probabilidades infinitesimales son:
+  \begin{align*}
+    \Prob\{X_{t+\Delta t} = n \mid X_t = n\} &= 1 - (\lambda_n + \mu_n)\Delta t + o(\Delta t),\\
+    \Prob\{X_{t+\Delta t} = n+1 \mid X_t = n\} &= \lambda_n \Delta t + o(\Delta t),\\
+    \Prob\{X_{t+\Delta t} = n-1 \mid X_t = n\} &= \mu_n \Delta t + o(\Delta t).
+  \end{align*}
+\end{Definicion}
+
+\begin{Proposicion}
+  Las probabilidades $P_n(t) = \Prob\{X_t = n\}$ satisfacen las ecuaciones diferenciales:
+  \[ P_n'(t) = \mu_{n+1} P_{n+1}(t) + \lambda_{n-1} P_{n-1}(t) - (\mu_n + \lambda_n) P_n(t), \quad n \geq 0, \]
+  con el convenio $\lambda_{-1} = 0$ y $\mu_0 = 0$.
+\end{Proposicion}
+
+\begin{proof}
+  Aplicamos la misma t\'ecnica que para cadenas generales, pero ahora las transiciones son solo a estados vecinos:
+  \[
+  P_n(t+\Delta t) = P_n(t)(1 - (\lambda_n + \mu_n)\Delta t + o(\Delta t)) + P_{n-1}(t)(\lambda_{n-1}\Delta t + o(\Delta t)) + P_{n+1}(t)(\mu_{n+1}\Delta t + o(\Delta t)).
+  \]
+  Reordenando:
+  \[
+  \frac{P_n(t+\Delta t) - P_n(t)}{\Delta t} = -(\lambda_n + \mu_n)P_n(t) + \lambda_{n-1}P_{n-1}(t) + \mu_{n+1}P_{n+1}(t) + \frac{o(\Delta t)}{\Delta t}(P_n(t) + P_{n-1}(t) + P_{n+1}(t)).
+  \]
+  Tomando l\'imite $\Delta t \to 0$, obtenemos la ecuaci\'on.
+\end{proof}
+
+\subsection{Ejemplos de Procesos de Nacimiento y Muerte}
+
+\begin{Ejemplo}[Proceso de Poisson]
+  El proceso de Poisson con tasa $\lambda$ es un proceso de nacimiento y muerte con $\lambda_n = \lambda$, $\mu_n = 0$ para todo $n$.
+\end{Ejemplo}
+
+\begin{Ejemplo}[Modelos de colas M/M]
+  Sea $X_t$ el n\'umero de personas en una cola.
+  \begin{description}
+    \item[Cola M/M/1:] Un servidor. $\lambda_n = \lambda$, $\mu_n = \mu$ para $n \geq 1$, $\mu_0 = 0$.
+    \item[Cola M/M/k:] $k$ servidores. $\lambda_n = \lambda$, $\mu_n = \min(n,k)\mu$.
+    \item[Cola M/M/$\infty$:] Infinitos servidores. $\lambda_n = \lambda$, $\mu_n = n\mu$.
+  \end{description}
+  La notaci\'on M/M indica que tanto los tiempos entre llegadas como los tiempos de servicio son exponenciales (Markovianos).
+\end{Ejemplo}
+
+\begin{Ejemplo}[Modelo de poblaci\'on]
+  Cada individuo produce nuevos individuos a tasa $\lambda$ y muere a tasa $\mu$, independientemente. Esto da $\lambda_n = n\lambda$, $\mu_n = n\mu$. Cuando $\mu = 0$, se llama proceso de Yule.
+\end{Ejemplo}
+
+\begin{Ejemplo}[Modelo de poblaci\'on con inmigraci\'on]
+  Adem\'as de los nacimientos y muertes internos, llegan nuevos individuos del exterior a tasa $\nu$. Entonces $\lambda_n = n\lambda + \nu$, $\mu_n = n\mu$.
+\end{Ejemplo}
+
+\begin{Ejemplo}[Modelo de crecimiento r\'apido]
+  $\lambda_n = n^2\lambda$, $\mu_n = 0$. Este modelo puede explotar en tiempo finito.
+\end{Ejemplo}
+
+\subsection{Clasificaci\'on de Procesos de Nacimiento y Muerte}
+
+\begin{Definicion}
+  Un proceso de nacimiento y muerte es \textbf{irreducible} si todos los estados se comunican, lo cual ocurre si y solo si $\lambda_n > 0$ para todo $n$ y $\mu_n > 0$ para todo $n \geq 1$.
+\end{Definicion}
+
+\begin{Definicion}
+  Una cadena irreducible es \textbf{recurrente} si con probabilidad 1 se regresa a cada estado; en caso contrario es \textbf{transitoria}. Si es recurrente y existe una distribuci\'on estacionaria, es \textbf{positivamente recurrente}; si no, es \textbf{nulamente recurrente}.
+\end{Definicion}
+
+\begin{Observacion}
+  Para procesos de nacimiento y muerte, existe una cadena en tiempo discreto embebida que sigue la cadena "cuando se mueve". Sus probabilidades de transici\'on son:
+  \[ p(n,n-1) = \frac{\mu_n}{\mu_n + \lambda_n}, \quad p(n,n+1) = \frac{\lambda_n}{\mu_n + \lambda_n}. \]
+  La cadena en tiempo continuo es recurrente si y solo si la cadena embebida es recurrente.
+\end{Observacion}
+
+\begin{Teorema}[Criterio de transiencia]
+  El proceso de nacimiento y muerte es transitorio si y solo si
+  \[ \sum_{n=1}^{\infty} \frac{\mu_1 \mu_2 \cdots \mu_n}{\lambda_1 \lambda_2 \cdots \lambda_n} < \infty. \]
+\end{Teorema}
+
+\begin{proof}
+  Sea $a(n)$ la probabilidad de que, comenzando en $n$, la cadena alcance alguna vez el estado 0. Entonces $a(0)=1$. Para $n \geq 1$, condicionando en el primer paso:
+  \[ a(n) = \frac{\mu_n}{\mu_n + \lambda_n} a(n-1) + \frac{\lambda_n}{\mu_n + \lambda_n} a(n+1). \]
+  Multiplicando por $\mu_n + \lambda_n$:
+  \[ (\mu_n + \lambda_n) a(n) = \mu_n a(n-1) + \lambda_n a(n+1). \]
+  Reordenando:
+  \[ \lambda_n (a(n+1) - a(n)) = \mu_n (a(n) - a(n-1)). \]
+  Definimos $d_n = a(n) - a(n+1)$. Entonces:
+  \[ \lambda_n d_n = \mu_n d_{n-1} \Rightarrow d_n = \frac{\mu_n}{\lambda_n} d_{n-1}. \]
+  Iterando:
+  \[ d_n = \frac{\mu_1 \mu_2 \cdots \mu_n}{\lambda_1 \lambda_2 \cdots \lambda_n} d_0. \]
+  Como $a(0)=1$, tenemos $d_0 = 1 - a(1)$. Entonces:
+  \[ a(n+1) = a(0) - \sum_{j=0}^n d_j = 1 - (1 - a(1)) \sum_{j=0}^n \frac{\mu_1 \cdots \mu_j}{\lambda_1 \cdots \lambda_j}, \]
+  con el convenio de que el t\'ermino $j=0$ es 1.
+
+  Si la cadena es transitoria, entonces $a(n) \to 0$ cuando $n \to \infty$. Esto requiere que la suma $\sum_{j=0}^\infty \frac{\mu_1 \cdots \mu_j}{\lambda_1 \cdots \lambda_j}$ converja, y entonces $a(1) = 1 - 1/\sum_{j=0}^\infty \frac{\mu_1 \cdots \mu_j}{\lambda_1 \cdots \lambda_j}$. Por tanto, la condici\'on de convergencia es equivalente a la transiencia.
+
+  Si la suma diverge, entonces la \'unica soluci\'on con $a(0)=1$ y $0 \leq a(n) \leq 1$ es $a(n)=1$ para todo $n$, lo que corresponde a recurrencia.
+\end{proof}
+
+\begin{Teorema}[Criterio de recurrencia positiva]
+  El proceso de nacimiento y muerte es positivamente recurrente si y solo si
+  \[ \sum_{n=0}^{\infty} \frac{\lambda_0 \lambda_1 \cdots \lambda_{n-1}}{\mu_1 \mu_2 \cdots \mu_n} < \infty, \]
+  donde el t\'ermino $n=0$ se interpreta como 1. En este caso, la distribuci\'on estacionaria es
+  \[ \pi(n) = \frac{\lambda_0 \lambda_1 \cdots \lambda_{n-1}}{\mu_1 \mu_2 \cdots \mu_n} \cdot \frac{1}{C}, \quad \text{con } C = \sum_{n=0}^\infty \frac{\lambda_0 \lambda_1 \cdots \lambda_{n-1}}{\mu_1 \mu_2 \cdots \mu_n}. \]
+\end{Teorema}
+
+\begin{proof}
+  Buscamos una distribuci\'on estacionaria $\pi$ que satisfaga las ecuaciones de balance:
+  \[ 0 = \lambda_{n-1} \pi(n-1) + \mu_{n+1} \pi(n+1) - (\lambda_n + \mu_n) \pi(n), \quad n \geq 0. \]
+  Para $n=0$, como $\mu_0 = 0$ y $\lambda_{-1}=0$, obtenemos:
+  \[ 0 = \mu_1 \pi(1) - \lambda_0 \pi(0) \Rightarrow \pi(1) = \frac{\lambda_0}{\mu_1} \pi(0). \]
+  Para $n \geq 1$, podemos reescribir la ecuaci\'on como:
+  \[ \mu_{n+1} \pi(n+1) - \lambda_n \pi(n) = \mu_n \pi(n) - \lambda_{n-1} \pi(n-1). \]
+  Esto muestra que la cantidad $\mu_n \pi(n) - \lambda_{n-1} \pi(n-1)$ es constante en $n$. Evaluando en $n=1$:
+  \[ \mu_1 \pi(1) - \lambda_0 \pi(0) = \mu_1 \cdot \frac{\lambda_0}{\mu_1} \pi(0) - \lambda_0 \pi(0) = 0. \]
+  Por tanto, la constante es 0, y tenemos:
+  \[ \mu_{n+1} \pi(n+1) = \lambda_n \pi(n) \Rightarrow \pi(n+1) = \frac{\lambda_n}{\mu_{n+1}} \pi(n). \]
+  Iterando:
+  \[ \pi(n) = \frac{\lambda_0 \lambda_1 \cdots \lambda_{n-1}}{\mu_1 \mu_2 \cdots \mu_n} \pi(0). \]
+  La condici\'on de normalizaci\'on $\sum_{n=0}^\infty \pi(n) = 1$ requiere que la serie $\sum_{n=0}^\infty \frac{\lambda_0 \lambda_1 \cdots \lambda_{n-1}}{\mu_1 \mu_2 \cdots \mu_n}$ converja. Si converge, definimos $C$ como su suma, y entonces $\pi(0) = 1/C$, obteniendo la f\'ormula.
+\end{proof}
+
+\subsection{Aplicaciones a Modelos de Colas}
+
+\begin{Ejemplo}[Cola M/M/1]
+  Para la cola M/M/1, $\lambda_n = \lambda$, $\mu_n = \mu$ para $n \geq 1$, $\mu_0 = 0$.
+  
+  Criterio de transiencia:
+  \[ \sum_{n=1}^\infty \frac{\mu_1 \cdots \mu_n}{\lambda_1 \cdots \lambda_n} = \sum_{n=1}^\infty \left(\frac{\mu}{\lambda}\right)^n. \]
+  Esta serie converge si $\mu/\lambda < 1$, es decir, si $\mu < \lambda$. Por tanto, la cola es transitoria si $\mu < \lambda$ (la tasa de servicio es menor que la tasa de llegada), lo que significa que la cola tiende a crecer indefinidamente.
+  
+  Criterio de recurrencia positiva:
+  \[ \sum_{n=0}^\infty \frac{\lambda_0 \cdots \lambda_{n-1}}{\mu_1 \cdots \mu_n} = \sum_{n=0}^\infty \left(\frac{\lambda}{\mu}\right)^n = \frac{1}{1 - \lambda/\mu} \quad \text{si } \lambda < \mu. \]
+  La serie converge si y solo si $\lambda < \mu$. En este caso, la distribuci\'on estacionaria es:
+  \[ \pi(n) = \left(1 - \frac{\lambda}{\mu}\right) \left(\frac{\lambda}{\mu}\right)^n, \quad n \geq 0. \]
+  Esta es una distribuci\'on geom\'etrica. La longitud esperada de la cola en equilibrio es:
+  \[ \E[X] = \sum_{n=0}^\infty n \pi(n) = \frac{\lambda/\mu}{1 - \lambda/\mu} = \frac{\lambda}{\mu - \lambda}. \]
+  Observamos que esta esperanza tiende a infinito cuando $\lambda \to \mu^-$.
+\end{Ejemplo}
+
+\begin{Ejemplo}[Cola M/M/k]
+  Para la cola M/M/k, $\lambda_n = \lambda$, $\mu_n = \min(n,k)\mu$. Para $n \geq k$, $\mu_n = k\mu$.
+  
+  Para $n \geq k$, tenemos:
+  \[ \frac{\mu_1 \cdots \mu_n}{\lambda_1 \cdots \lambda_n} = \frac{[\mu \cdot 2\mu \cdots (k-1)\mu] \cdot (k\mu)^{n-k+1}}{\lambda^n} = \frac{(k-1)! k^{n-k+1} \mu^n}{\lambda^n}. \]
+  Esto es $\frac{(k-1)!}{k^{k-1}} \left(\frac{k\mu}{\lambda}\right)^n \cdot \text{constante}$. La serie $\sum_{n=k}^\infty \left(\frac{k\mu}{\lambda}\right)^n$ converge si y solo si $k\mu < \lambda$. Por tanto, la cola es transitoria si $k\mu < \lambda$.
+  
+  Para la recurrencia positiva, la serie estacionaria converge si y solo si $\lambda < k\mu$. En este caso, la distribuci\'on estacionaria existe pero su forma es m\'as complicada.
+\end{Ejemplo}
+
+\begin{Ejemplo}[Cola M/M/$\infty$]
+  Para la cola M/M/$\infty$, $\lambda_n = \lambda$, $\mu_n = n\mu$.
+  
+  La serie para la transiencia es $\sum_{n=1}^\infty \frac{n! \mu^n}{\lambda^n}$, que diverge para todo $\lambda, \mu > 0$ (por la f\'ormula de Stirling, $n! \sim \sqrt{2\pi n}(n/e)^n$, y el t\'ermino $n^n$ domina). Por tanto, la cola es siempre recurrente.
+  
+  La serie para la recurrencia positiva es:
+  \[ \sum_{n=0}^\infty \frac{\lambda^n}{n! \mu^n} = \sum_{n=0}^\infty \frac{(\lambda/\mu)^n}{n!} = e^{\lambda/\mu} < \infty. \]
+  Por tanto, la cola es siempre positivamente recurrente. La distribuci\'on estacionaria es:
+  \[ \pi(n) = e^{-\lambda/\mu} \frac{(\lambda/\mu)^n}{n!}, \]
+  una distribuci\'on de Poisson con par\'ametro $\lambda/\mu$. La longitud esperada de la cola en equilibrio es $\lambda/\mu$.
+\end{Ejemplo}
+
+\subsection{Procesos de Nacimiento Puro}
+
+\begin{Definicion}
+  Un proceso de nacimiento y muerte con $\mu_n = 0$ para todo $n$ se llama \textbf{proceso de nacimiento puro}.
+\end{Definicion}
+
+\begin{Ejemplo}[Proceso de Yule]
+  El proceso de Yule tiene $\lambda_n = n\lambda$, $\mu_n = 0$. Supongamos que $X_0 = 1$.
+  
+  Las ecuaciones diferenciales para $P_n(t) = \Prob\{X_t = n\}$ son:
+  \[ P_n'(t) = (n-1)\lambda P_{n-1}(t) - n\lambda P_n(t), \quad n \geq 1, \]
+  con $P_1(0) = 1$.
+  
+  Resolvemos por inducci\'on. Para $n=1$:
+  \[ P_1'(t) = -\lambda P_1(t) \Rightarrow P_1(t) = e^{-\lambda t}. \]
+  Para $n=2$:
+  \[ P_2'(t) = \lambda P_1(t) - 2\lambda P_2(t) = \lambda e^{-\lambda t} - 2\lambda P_2(t). \]
+  Esta es una ecuaci\'on lineal de primer orden de la forma $P_2' + 2\lambda P_2 = \lambda e^{-\lambda t}$. Multiplicamos por $e^{2\lambda t}$:
+  \[ \frac{d}{dt}(P_2 e^{2\lambda t}) = \lambda e^{-\lambda t} e^{2\lambda t} = \lambda e^{\lambda t}. \]
+  Integrando: $P_2 e^{2\lambda t} = \int \lambda e^{\lambda t} dt = e^{\lambda t} + C$. Con $P_2(0)=0$, obtenemos $0 = 1 + C \Rightarrow C = -1$. Por tanto:
+  \[ P_2 e^{2\lambda t} = e^{\lambda t} - 1 \Rightarrow P_2(t) = e^{-\lambda t} - e^{-2\lambda t} = e^{-\lambda t}(1 - e^{-\lambda t}). \]
+  
+  Para $n=3$:
+  \[ P_3'(t) = 2\lambda P_2(t) - 3\lambda P_3(t) = 2\lambda e^{-\lambda t}(1 - e^{-\lambda t}) - 3\lambda P_3(t). \]
+  Multiplicamos por $e^{3\lambda t}$:
+  \[ \frac{d}{dt}(P_3 e^{3\lambda t}) = 2\lambda e^{-\lambda t}(1 - e^{-\lambda t}) e^{3\lambda t} = 2\lambda e^{2\lambda t}(1 - e^{-\lambda t}) = 2\lambda(e^{2\lambda t} - e^{\lambda t}). \]
+  Integrando: $P_3 e^{3\lambda t} = 2\lambda \int (e^{2\lambda t} - e^{\lambda t}) dt = 2\lambda \left(\frac{e^{2\lambda t}}{2\lambda} - \frac{e^{\lambda t}}{\lambda}\right) + C = e^{2\lambda t} - 2e^{\lambda t} + C$.
+  Con $P_3(0)=0$, tenemos $0 = 1 - 2 + C \Rightarrow C = 1$. Por tanto:
+  \[ P_3 e^{3\lambda t} = e^{2\lambda t} - 2e^{\lambda t} + 1 = (e^{\lambda t} - 1)^2 \Rightarrow P_3(t) = e^{-3\lambda t}(e^{\lambda t} - 1)^2 = e^{-\lambda t}(1 - e^{-\lambda t})^2. \]
+  
+  Por inducci\'on, se puede demostrar que:
+  \[ P_n(t) = e^{-\lambda t}(1 - e^{-\lambda t})^{n-1}, \quad n \geq 1. \]
+  Esta es una distribuci\'on geom\'etrica con par\'ametro $e^{-\lambda t}$.
+  
+  La esperanza de $X_t$ es:
+  \[ \E[X_t] = \sum_{n=1}^\infty n e^{-\lambda t}(1 - e^{-\lambda t})^{n-1} = e^{\lambda t}. \]
+  Podemos obtener esto tambi\'en de una ecuaci\'on diferencial para $m(t) = \E[X_t]$:
+  \[ m'(t) = \sum_{n=1}^\infty n P_n'(t) = \sum_{n=1}^\infty n[(n-1)\lambda P_{n-1} - n\lambda P_n] = \lambda \sum_{n=1}^\infty (n-1)P_{n-1} - \lambda \sum_{n=1}^\infty n^2 P_n. \]
+  El primer t\'ermino: $\lambda \sum_{n=1}^\infty (n-1)P_{n-1} = \lambda \sum_{k=0}^\infty k P_k = \lambda m(t)$. El segundo t\'ermino: $-\lambda \sum_{n=1}^\infty n^2 P_n = -\lambda \E[X_t^2]$. Esto no parece simplificar directamente. Mejor usamos otro m\'etodo:
+  \[ m'(t) = \sum_{n=1}^\infty n P_n'(t) = \sum_{n=1}^\infty n[(n-1)\lambda P_{n-1} - n\lambda P_n] = \lambda \sum_{n=1}^\infty n(n-1)P_{n-1} - \lambda \sum_{n=1}^\infty n^2 P_n. \]
+  En el primer t\'ermino, hacemos $k = n-1$: $\sum_{n=1}^\infty n(n-1)P_{n-1} = \sum_{k=0}^\infty (k+1)k P_k = \E[X_t^2] + \E[X_t]$. El segundo t\'ermino es $\E[X_t^2]$. Por tanto:
+  \[ m'(t) = \lambda (\E[X_t^2] + \E[X_t] - \E[X_t^2]) = \lambda \E[X_t] = \lambda m(t). \]
+  Con $m(0)=1$, obtenemos $m(t) = e^{\lambda t}$, correcto.
+  
+  Otra perspectiva: sea $Y_n$ el tiempo en que la poblaci\'on alcanza $n$ por primera vez. Entonces $Y_n = T_1 + \cdots + T_{n-1}$, donde $T_i$ es el tiempo entre la llegada del individuo $i$ y el $i+1$. Los $T_i$ son independientes con $T_i \sim \operatorname{Exp}(i\lambda)$. Por tanto:
+  \[ \E[Y_n] = \sum_{i=1}^{n-1} \frac{1}{i\lambda} \sim \frac{\ln n}{\lambda}, \]
+  y $\operatorname{Var}(Y_n) = \sum_{i=1}^{n-1} \frac{1}{i^2\lambda^2} < \infty$. Esto significa que $Y_n$ es aproximadamente $\ln n/\lambda$ con un error acotado.
+\end{Ejemplo}
+
+\begin{Ejemplo}[Modelo de crecimiento r\'apido]
+  Consideremos $\lambda_n = n^2\lambda$, $\mu_n = 0$. Sea $Y_n$ el tiempo hasta alcanzar $n$ individuos, comenzando con 1. Entonces $Y_n = T_1 + \cdots + T_{n-1}$ con $T_i \sim \operatorname{Exp}(i^2\lambda)$. Entonces:
+  \[ \E[Y_\infty] = \sum_{i=1}^\infty \frac{1}{i^2\lambda} = \frac{1}{\lambda} \cdot \frac{\pi^2}{6} < \infty. \]
+  Esto implica que con probabilidad 1, $Y_\infty < \infty$, es decir, la poblaci\'on se vuelve infinita en tiempo finito. Este fen\'omeno se llama \textbf{explosi\'on}.
+\end{Ejemplo}
+
+\section{Ecuaciones Forward y Backward}
+
+\begin{Definicion}[Ecuaciones forward]
+  Las ecuaciones forward se obtienen condicionando en el estado en tiempo $t$:
+  \[ p_{t+\Delta t}(x,y) = \sum_z p_t(x,z) p_{\Delta t}(z,y). \]
+  Usando las probabilidades infinitesimales:
+  \begin{align*}
+    p_{t+\Delta t}(x,y) &= p_t(x,y)(1 - \alpha(y)\Delta t + o_y(\Delta t)) + \sum_{z \neq y} p_t(x,z)(\alpha(z,y)\Delta t + o_z(\Delta t)).
+  \end{align*}
+  Si podemos intercambiar l\'imites y justificar que $\sum_z p_t(x,z) o_z(\Delta t) = o(\Delta t)$, entonces:
+  \[ \frac{p_{t+\Delta t}(x,y) - p_t(x,y)}{\Delta t} = -\alpha(y)p_t(x,y) + \sum_{z \neq y} \alpha(z,y)p_t(x,z) + \frac{o(\Delta t)}{\Delta t}. \]
+  Tomando $\Delta t \to 0$:
+  \[ \frac{\partial}{\partial t} p_t(x,y) = -\alpha(y)p_t(x,y) + \sum_{z \neq y} \alpha(z,y)p_t(x,z). \]
+  En forma matricial: $\frac{d}{dt} \PP_t = \PP_t \A$.
+\end{Definicion}
+
+\begin{Definicion}[Ecuaciones backward]
+  Las ecuaciones backward se obtienen condicionando en el primer intervalo:
+  \[ p_{t+\Delta t}(x,y) = \sum_z p_{\Delta t}(x,z) p_t(z,y). \]
+  Usando las probabilidades infinitesimales:
+  \begin{align*}
+    p_{t+\Delta t}(x,y) &= (1 - \alpha(x)\Delta t + o_x(\Delta t))p_t(x,y) + \sum_{z \neq x} (\alpha(x,z)\Delta t + o_x(\Delta t)) p_t(z,y).
+  \end{align*}
+  Reordenando:
+  \[ \frac{p_{t+\Delta t}(x,y) - p_t(x,y)}{\Delta t} = -\alpha(x)p_t(x,y) + \sum_{z \neq x} \alpha(x,z)p_t(z,y) + \frac{o_x(\Delta t)}{\Delta t}\left(p_t(x,y) + \sum_{z \neq x} p_t(z,y)\right). \]
+  Tomando $\Delta t \to 0$:
+  \[ \frac{\partial}{\partial t} p_t(x,y) = -\alpha(x)p_t(x,y) + \sum_{z \neq x} \alpha(x,z)p_t(z,y). \]
+  En forma matricial: $\frac{d}{dt} \PP_t = \A \PP_t$.
+\end{Definicion}
+
+\begin{Observacion}
+  Para espacios de estados finitos, ambas ecuaciones tienen la misma soluci\'on $\PP_t = e^{t\A}$. Las ecuaciones backward siempre son v\'alidas, mientras que las forward requieren condiciones de regularidad que se satisfacen en todos los ejemplos de este cap\'itulo.
+\end{Observacion}
+
+\section{Ejercicios}
+
+\begin{Ejercicio}
+  Supongamos que el n\'umero de llamadas por hora que llegan a un servicio de atenci\'on sigue un proceso de Poisson con $\lambda = 4$.
+  \begin{enumerate}
+    \item ¿Cu\'al es la probabilidad de que lleguen menos de dos llamadas en la primera hora?
+    \item Supongamos que llegan seis llamadas en la primera hora. ¿Cu\'al es la probabilidad de que lleguen al menos dos llamadas en la segunda hora?
+    \item La persona que atiende los tel\'efonos espera hasta que hayan llegado quince llamadas antes de ir a almorzar. ¿Cu\'al es el tiempo esperado que esperar\'a la persona?
+    \item Supongamos que se sabe que exactamente ocho llamadas llegaron en las primeras dos horas. ¿Cu\'al es la probabilidad de que exactamente cinco de ellas llegaran en la primera hora?
+    \item Supongamos que se sabe que exactamente $k$ llamadas llegaron en las primeras cuatro horas. ¿Cu\'al es la probabilidad de que exactamente $j$ de ellas llegaran en la primera hora?
+  \end{enumerate}
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Sean $X_t$ y $Y_t$ dos procesos de Poisson independientes con par\'ametros $\lambda_1$ y $\lambda_2$ respectivamente, que miden el n\'umero de clientes que llegan a las tiendas 1 y 2.
+  \begin{enumerate}
+    \item ¿Cu\'al es la probabilidad de que llegue un cliente a la tienda 1 antes de que llegue alg\'un cliente a la tienda 2?
+    \item ¿Cu\'al es la probabilidad de que en la primera hora llegue un total de exactamente cuatro clientes a las dos tiendas?
+    \item Dado que exactamente cuatro clientes han llegado a las dos tiendas, ¿cu\'al es la probabilidad de que los cuatro hayan ido a la tienda 1?
+    \item Sea $T$ el tiempo de llegada del primer cliente a la tienda 2. Entonces $X_T$ es el n\'umero de clientes en la tienda 1 en el momento de la primera llegada a la tienda 2. Encuentre la distribuci\'on de probabilidad de $X_T$.
+  \end{enumerate}
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Supongamos que $X_t$ y $Y_t$ son procesos de Poisson independientes con par\'ametros $\lambda_1$ y $\lambda_2$, que miden el n\'umero de llamadas que llegan a dos tel\'efonos diferentes. Sea $Z_t = X_t + Y_t$.
+  \begin{enumerate}
+    \item Demuestre que $Z_t$ es un proceso de Poisson. ¿Cu\'al es su par\'ametro?
+    \item ¿Cu\'al es la probabilidad de que la primera llamada llegue al primer tel\'efono?
+    \item Sea $T$ el primer momento en que ha llegado al menos una llamada de cada uno de los dos tel\'efonos. Encuentre la funci\'on de densidad y la funci\'on de distribuci\'on de $T$.
+  \end{enumerate}
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Sea $\A$ el generador infinitesimal de una cadena de Markov irreducible en tiempo continuo con espacio de estados finito.
+  \begin{enumerate}
+    \item Sea $a$ un n\'umero positivo mayor que todas las entradas de $\A$. Demuestre que $P = (1/a)\A + \I$ es la matriz de transici\'on de una cadena en tiempo discreto irreducible y aperi\'odica.
+    \item Use esto para concluir que $\A$ tiene un \'unico eigenvector izquierdo con eigenvalor 0 que es un vector de probabilidad, y que todos los dem\'as eigenvalores de $\A$ tienen parte real estrictamente menor que 0.
+  \end{enumerate}
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Sea $X_t$ una cadena de Markov con espacio de estados $\{1,2\}$ y tasas $\alpha(1,2) = 1$, $\alpha(2,1) = 4$. Encuentre $\PP_t$.
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Repita el Ejercicio 3.5 con espacio de estados $\{1,2,3\}$ y tasas $\alpha(1,2) = 1$, $\alpha(2,1) = 4$, $\alpha(2,3) = 1$, $\alpha(3,2) = 4$, $\alpha(1,3) = 0$, $\alpha(3,1) = 0$.
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Sea $X_t$ una cadena de Markov irreducible en tiempo continuo. Demuestre que para cada $i, j$ y todo $t > 0$,
+  \[ \Prob\{X_t = j \mid X_0 = i\} > 0. \]
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Considere la cadena de Markov en tiempo continuo con espacio de estados $\{1,2,3,4\}$ y generador infinitesimal
+  \[ \A = \begin{pmatrix}
+    -3 & 1 & 1 & 1 \\
+    2 & -4 & 1 & 1 \\
+    2 & 1 & -4 & 1 \\
+    1 & 1 & 1 & -3
+  \end{pmatrix}. \]
+  \begin{enumerate}
+    \item Encuentre la distribuci\'on de equilibrio $\bar{\pi}$.
+    \item Suponga que la cadena comienza en el estado 1. ¿Cu\'al es el tiempo esperado hasta que cambie de estado por primera vez?
+    \item Suponga nuevamente que la cadena comienza en el estado 1. ¿Cu\'al es el tiempo esperado hasta que la cadena est\'e en el estado 4?
+  \end{enumerate}
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Repita el Ejercicio 3.8 con
+  \[ \A = \begin{pmatrix}
+    -3 & 2 & 1 & 0 \\
+    1 & -4 & 2 & 1 \\
+    0 & 2 & -4 & 2 \\
+    0 & 0 & 1 & -1
+  \end{pmatrix}. \]
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Suponga que $\alpha$ da las tasas para una cadena de Markov irreducible en tiempo continuo en un espacio de estados finito. Suponga que la medida invariante es $\pi$. Sea
+  \[ p(x,y) = \alpha(x,y)/\alpha(x), \quad x \neq y, \]
+  la probabilidad de transici\'on para la cadena en tiempo discreto correspondiente a la cadena en tiempo continuo "cuando se mueve". Encuentre la probabilidad invariante para la cadena en tiempo discreto en t\'erminos de $\pi$ y $\alpha$.
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Sea $X_t$ un proceso de nacimiento y muerte en tiempo continuo con tasa de nacimiento $\lambda_n = 1 + 1/(n+1)$ y tasa de muerte $\mu_n = 1$. ¿Es este proceso positivamente recurrente, nulamente recurrente o transitorio? ¿Y si $\lambda_n = 1 - 1/(n+2)$?
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Considere el modelo de poblaci\'on (Ejemplo 3, Secci\'on 3.3). ¿Para qu\'e valores de $\mu$ y $\lambda$ es segura la extinci\'on, es decir, cu\'ando es la probabilidad de alcanzar el estado 0 igual a 1?
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Considere el modelo de poblaci\'on con inmigraci\'on (Ejemplo 4, Secci\'on 3.3). ¿Para qu\'e valores de $\mu, \lambda, \nu$ es la cadena positivamente recurrente, nulamente recurrente o transitoria?
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Considere un proceso de nacimiento y muerte con $\lambda_n = 1/(n+1)$ y $\mu_n = 1$. Demuestre que el proceso es positivamente recurrente y encuentre la distribuci\'on estacionaria.
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Suponga que se tiene un modelo determinista para la poblaci\'on donde la poblaci\'on crece proporcionalmente al cuadrado de la poblaci\'on actual. En otras palabras, la poblaci\'on $p(t)$ satisface la ecuaci\'on diferencial
+  \[ \frac{dp}{dt} = c[p(t)]^2, \]
+  para alguna constante $c > 0$. Suponga $p(0) = 1$. Resuelva esta ecuaci\'on diferencial (por separaci\'on de variables) y describa qu\'e sucede cuando el tiempo aumenta.
+\end{Ejercicio}
+
+\begin{Ejercicio}
+  Considere un proceso de nacimiento y muerte con tasas de nacimiento $\lambda_n$ y tasas de muerte $\mu_n$. ¿Cu\'ales son las ecuaciones backward para las probabilidades de transici\'on $p_t(m,n)$?
+\end{Ejercicio}
+
+\end{document}

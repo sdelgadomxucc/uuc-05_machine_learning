@@ -1,0 +1,1554 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{mathrsfs}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usetikzlibrary{arrows, positioning, automata, calc, patterns, decorations.pathmorphing, matrix, shapes.geometric}
+\pgfplotsset{compat=1.18}
+
+% Temática estilo IHES (minimalista, elegante)
+\usetheme{default}
+\usecolortheme{beaver}
+\usefonttheme{serif}
+
+% Configuración de colores
+\setbeamercolor{title}{fg=black!90, bg=gray!10}
+\setbeamercolor{frametitle}{fg=black!90, bg=gray!10}
+\setbeamercolor{block title}{fg=white, bg=black!80}
+\setbeamercolor{block body}{fg=black, bg=gray!10}
+\setbeamercolor{example block title}{fg=white, bg=blue!50!black!80}
+\setbeamercolor{example block body}{fg=black, bg=blue!5}
+\setbeamercolor{definition block title}{fg=white, bg=green!50!black!80}
+\setbeamercolor{definition block body}{fg=black, bg=green!5}
+
+% Quitar barras de navegación
+\setbeamertemplate{navigation symbols}{}
+
+% Estilo de pies de página
+\setbeamertemplate{footline}{
+  \hfill
+  \insertframenumber/\inserttotalframenumber
+  \hspace{1em}
+  \vspace{0.2em}
+}
+
+% Más espacio para imágenes
+\setbeamersize{text margin left=1cm, text margin right=1cm}
+
+% Teoremas, definiciones, etc.
+\theoremstyle{plain}
+\newtheorem{teorema}{Teorema}
+\newtheorem{proposicion}{Proposición}
+\newtheorem{lema}{Lema}
+\newtheorem{corolario}{Corolario}
+
+\theoremstyle{definition}
+\newtheorem{definicion}{Definición}
+\newtheorem{ejemplo}{Ejemplo}
+\newtheorem{observacion}{Observación}
+
+% Atajos
+\newcommand{\A}{\mathbf{A}}
+\newcommand{\I}{\mathbf{I}}
+\newcommand{\PP}{\mathbf{P}}
+\newcommand{\p}{\mathbf{p}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\1}{\mathbf{1}}
+
+\title{Cadenas de Markov en Tiempo Continuo}
+\author{César Galindo}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Contenido}
+  \tableofcontents
+\end{frame}
+
+\section{Propiedades de la Exponencial}
+
+\begin{frame}{Relojes exponenciales independientes}
+  \begin{definicion}
+    Sean $T_1,\ldots,T_n$ variables aleatorias independientes con distribución exponencial de parámetros $b_1, \ldots, b_n$ respectivamente. Definimos
+    \[ T = \min\{T_1, \ldots, T_n\}. \]
+    Interpretamos $T_i$ como el momento en que suena el reloj $i$.
+  \end{definicion}
+  
+  \vspace{0.5cm}
+  
+  \begin{center}
+    \begin{tikzpicture}[scale=1.0]
+      % Dibujar relojes
+      \foreach \i in {1,...,4} {
+        \draw (2.2*\i,0) circle (0.5);
+        \draw (2.2*\i,0) -- ++(0,0.4);
+        \draw (2.2*\i,0) -- ++(0.25,-0.25);
+        \node at (2.2*\i,-1) {$T_\i$};
+      }
+      % Flecha de tiempo
+      \draw[->, thick] (0,-1.8) -- (10,-1.8) node[right] {$t$};
+      \foreach \x in {0,2.2,4.4,6.6,8.8} {
+        \draw (\x,-1.8) -- (\x,-1.7);
+      }
+      % Marcar tiempos
+      \draw[red, thick] (2.8,-1.8) -- (2.8,-1.4) node[above] {$T$};
+      \node at (2.8,-2.3) {mínimo};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{El mínimo de exponenciales es exponencial}
+  \begin{teorema}
+    La variable aleatoria $T = \min\{T_1, \ldots, T_n\}$ tiene distribución exponencial con parámetro $b_1 + \cdots + b_n$.
+  \end{teorema}
+  
+  \begin{proof}
+    Calculamos la función de supervivencia:
+    \[
+    \Prob\{T \geq t\} = \Prob\{T_1 \geq t, \ldots, T_n \geq t\}.
+    \]
+    Por independencia:
+    \[
+    \Prob\{T \geq t\} = \prod_{i=1}^n \Prob\{T_i \geq t\} = \prod_{i=1}^n e^{-b_i t} = e^{-(b_1 + \cdots + b_n)t}.
+    \]
+  \end{proof}
+\end{frame}
+
+\begin{frame}{Probabilidad de que un reloj sea el primero}
+  \begin{teorema}
+    La probabilidad de que el reloj $i$ sea el primero en sonar es
+    \[ \Prob\{T_i = T\} = \frac{b_i}{b_1 + \cdots + b_n}. \]
+  \end{teorema}
+
+  \vspace{0.3cm}
+  Idea: se integra sobre el instante en que suena el reloj $i$ y se exige que todos los demás sigan activos hasta ese tiempo.
+\end{frame}
+
+\begin{frame}{Probabilidad de que un reloj sea el primero (demostración)}
+  \small
+  \begin{proof}
+    Condicionamos en el valor de $T_i$:
+    \begin{align*}
+      \Prob\{T_i = T\} &= \int_0^\infty \Prob\{T_j > t\ \forall j\neq i\} \, b_i e^{-b_i t}\,dt \\
+      &= \int_0^\infty e^{-(b_1+\cdots+b_{i-1}+b_{i+1}+\cdots+b_n)t} b_i e^{-b_i t}\,dt \\
+      &= b_i \int_0^\infty e^{-(b_1+\cdots+b_n)t}\,dt \\
+      &= \frac{b_i}{\sum_j b_j}.
+    \end{align*}
+  \end{proof}
+\end{frame}
+
+\section{Cadenas en Tiempo Continuo}
+
+\begin{frame}{Definición de CTMC}
+  \begin{definicion}
+    Sea $S$ un espacio de estados finito. Un proceso $\{X_t\}_{t\ge0}$ con valores en $S$ es una \textbf{cadena de Markov en tiempo continuo} si satisface:
+    \begin{itemize}
+      \item \textbf{Propiedad de Markov:} $\Prob\{X_t = y \mid X_r, 0 \leq r \leq s\} = \Prob\{X_t = y \mid X_s\}$.
+      \item \textbf{Homogeneidad temporal:} $\Prob\{X_t = y \mid X_s = x\} = \Prob\{X_{t-s} = y \mid X_0 = x\}$.
+    \end{itemize}
+  \end{definicion}
+\end{frame}
+
+\begin{frame}{Tasas de transición}
+  \begin{definicion}
+    Para cada $x \neq y$, asignamos una \textbf{tasa de transición} $\alpha(x,y) \geq 0$. La \textbf{tasa total de salida} de $x$ es
+    \[ \alpha(x) = \sum_{y \neq x} \alpha(x,y). \]
+  \end{definicion}
+
+  \vspace{0.4cm}
+  \begin{block}{Interpretación}
+    En un intervalo muy pequeño, $\alpha(x,y)$ mide la rapidez con la que el proceso abandona $x$ y salta hacia $y$.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Probabilidades infinitesimales}
+  \begin{block}{Comportamiento en intervalos pequeños}
+    \begin{align*}
+      \Prob\{X_{t+\Delta t} = x \mid X_t = x\} &= 1 - \alpha(x)\Delta t + o(\Delta t),\\
+      \Prob\{X_{t+\Delta t} = y \mid X_t = x\} &= \alpha(x,y)\Delta t + o(\Delta t), \quad y \neq x.
+    \end{align*}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Probabilidades infinitesimales: esquema}
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=1.0cm, thick},
+      ->, >=stealth, thick,
+      scale=0.95
+    ]
+      \node[state] (x) at (0,0) {$x$};
+      \node[state] (y1) at (4,1.5) {$y_1$};
+      \node[state] (y2) at (4,0) {$y_2$};
+      \node[state] (y3) at (4,-1.5) {$y_3$};
+      
+      \path (x) edge node[above, pos=0.58] {$\alpha(x,y_1)\Delta t$} (y1);
+      \path (x) edge node[above, pos=0.58] {$\alpha(x,y_2)\Delta t$} (y2);
+      \path (x) edge node[below, pos=0.58] {$\alpha(x,y_3)\Delta t$} (y3);
+      \path (x) edge[loop above, min distance=1.5cm] node {$1-\alpha(x)\Delta t$} (x);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Generador infinitesimal}
+  \begin{definicion}
+    La \textbf{matriz generadora infinitesimal} $\A$ tiene entradas:
+    \[ \A(x,y) = \begin{cases}
+      \alpha(x,y) & \text{si } x \neq y,\\
+      -\alpha(x) & \text{si } x = y.
+    \end{cases} \]
+  \end{definicion}
+
+  \begin{observacion}
+    Las filas de $\A$ suman cero y las entradas fuera de la diagonal son no negativas.
+  \end{observacion}
+\end{frame}
+
+\begin{frame}{Forma de la matriz generadora}
+  \begin{center}
+    \begin{tikzpicture}[scale=0.95]
+      \matrix[matrix of math nodes, left delimiter={[}, right delimiter={]}, ampersand replacement=\&] {
+        -\alpha(1) \& \alpha(1,2) \& \cdots \& \alpha(1,n) \\
+        \alpha(2,1) \& -\alpha(2) \& \cdots \& \alpha(2,n) \\
+        \vdots \& \vdots \& \ddots \& \vdots \\
+        \alpha(n,1) \& \alpha(n,2) \& \cdots \& -\alpha(n) \\
+      };
+    \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.3cm}
+  \[
+    \sum_y \A(x,y) = -\alpha(x) + \sum_{y\neq x} \alpha(x,y) = 0.
+  \]
+\end{frame}
+
+\begin{frame}{Ecuaciones diferenciales}
+  \begin{proposicion}
+    Las probabilidades $p_x(t) = \Prob\{X_t = x\}$ satisfacen
+    \[ p_x'(t) = -\alpha(x)p_x(t) + \sum_{y \neq x} \alpha(y,x)p_y(t). \]
+  \end{proposicion}
+
+  \vspace{0.3cm}
+  \begin{center}
+    \Large
+    $\text{flujo que entra} - \text{flujo que sale}$
+  \end{center}
+\end{frame}
+
+\begin{frame}{Ecuaciones diferenciales: demostración I}
+  \begin{proof}
+    Condicionando en el estado en el instante $t$:
+    \begin{align*}
+      p_x(t+\Delta t)
+      &= \sum_y \Prob\{X_t=y\}\Prob\{X_{t+\Delta t}=x\mid X_t=y\} \\
+      &= p_x(t)\Prob\{X_{t+\Delta t}=x\mid X_t=x\}
+         + \sum_{y\neq x} p_y(t)\Prob\{X_{t+\Delta t}=x\mid X_t=y\}.
+    \end{align*}
+    Usando las probabilidades infinitesimales:
+    \[
+      p_x(t+\Delta t)
+      = p_x(t)(1-\alpha(x)\Delta t)
+      + \sum_{y\neq x} p_y(t)\alpha(y,x)\Delta t
+      + o(\Delta t).
+    \]
+  \end{proof}
+\end{frame}
+
+\begin{frame}{Ecuaciones diferenciales: demostración II}
+  \begin{proof}[Continuación]
+    Restamos $p_x(t)$ a ambos lados y dividimos entre $\Delta t$:
+    \[
+      \frac{p_x(t+\Delta t)-p_x(t)}{\Delta t}
+      = -\alpha(x)p_x(t) + \sum_{y\neq x}\alpha(y,x)p_y(t) + o(1).
+    \]
+    Al tomar el límite cuando $\Delta t\to 0$ obtenemos
+    \[
+      p_x'(t) = -\alpha(x)p_x(t) + \sum_{y\neq x} \alpha(y,x)p_y(t).
+    \]
+  \end{proof}
+\end{frame}
+
+\begin{frame}{Forma matricial}
+  \begin{proposicion}
+    Sea $\p(t)$ el vector fila de probabilidades. Entonces
+    \[
+      \p'(t) = \p(t)\A.
+    \]
+  \end{proposicion}
+
+  \begin{definicion}
+    La matriz de transición $\PP_t$ tiene entradas
+    \[
+      p_t(x,y) = \Prob\{X_t = y \mid X_0 = x\}.
+    \]
+    Por tanto,
+    \[
+      \frac{d}{dt}\PP_t = \PP_t\A,
+      \qquad
+      \PP_0 = \I.
+    \]
+  \end{definicion}
+\end{frame}
+
+\begin{frame}{Solución matricial}
+  \begin{proposicion}
+    La solución del sistema es
+    \[
+      \p(t) = \p(0)e^{t\A}.
+    \]
+    En particular,
+    \[
+      \PP_t = e^{t\A}
+      = \sum_{n=0}^{\infty} \frac{(t\A)^n}{n!}.
+    \]
+  \end{proposicion}
+
+  \vspace{0.25cm}
+  \begin{center}
+    \begin{tikzpicture}[scale=1.05, transform shape]
+      \node[draw, rounded corners, thick, fill=gray!5, minimum width=3.8cm, minimum height=1cm] at (0,0) {$\PP_t = e^{t\A}$};
+      \draw[->, thick] (-2.3,-0.8) -- (2.3,-0.8) node[midway, below] {evolución temporal};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Ejemplo: cadena de dos estados}
+  \begin{ejemplo}
+    Estados $\{0,1\}$, tasas $\alpha(0,1)=1$, $\alpha(1,0)=2$.
+    \[ \A = \begin{pmatrix}
+      -1 & 1 \\ 2 & -2
+    \end{pmatrix}. \]
+  \end{ejemplo}
+
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=1.2cm},
+      ->, >=stealth, thick
+    ]
+      \node[state] (0) at (0,0) {$0$};
+      \node[state] (1) at (4,0) {$1$};
+      \path (0) edge[bend left] node[above] {$1$} (1);
+      \path (1) edge[bend left] node[below] {$2$} (0);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Ejemplo: cadena de dos estados (solución)}
+  Eigenvalores: $\lambda_1=0$, $\lambda_2=-3$.
+
+  \[
+  \PP_t = \begin{pmatrix}
+    \frac23+\frac13 e^{-3t} & \frac13-\frac13 e^{-3t} \\[4pt]
+    \frac23-\frac23 e^{-3t} & \frac13+\frac23 e^{-3t}
+  \end{pmatrix}.
+  \]
+\end{frame}
+
+\begin{frame}{Ejemplo: cadena de cuatro estados}
+  \begin{ejemplo}
+    Estados $\{0,1,2,3\}$, generador:
+    \[ \A = \begin{pmatrix}
+      -3 & 1 & 1 & 1 \\
+      2 & -4 & 1 & 1 \\
+      2 & 1 & -4 & 1 \\
+      1 & 1 & 1 & -3
+    \end{pmatrix}. \]
+  \end{ejemplo}
+\end{frame}
+
+\begin{frame}{Ejemplo: cadena de cuatro estados (grafo)}
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=11mm, line width=0.9pt, fill=gray!8},
+      rate/.style={font=\footnotesize, fill=white, inner sep=1.2pt},
+      >={stealth},
+      line width=0.95pt,
+      scale=0.98,
+      transform shape
+    ]
+      \node[state] (0) at (135:2.25) {$0$};
+      \node[state] (1) at (45:2.25) {$1$};
+      \node[state] (2) at (-45:2.25) {$2$};
+      \node[state] (3) at (-135:2.25) {$3$};
+
+      \draw[->] (0) to[bend left=14] node[rate, above] {$1$} (1);
+      \draw[->] (1) to[bend left=14] node[rate, below] {$2$} (0);
+
+      \draw[->] (1) to[bend left=14] node[rate, right] {$1$} (2);
+      \draw[->] (2) to[bend left=14] node[rate, left] {$1$} (1);
+
+      \draw[->] (2) to[bend left=14] node[rate, below] {$1$} (3);
+      \draw[->] (3) to[bend left=14] node[rate, above] {$1$} (2);
+
+      \draw[->] (3) to[bend left=14] node[rate, left] {$1$} (0);
+      \draw[->] (0) to[bend left=14] node[rate, right] {$1$} (3);
+
+      \draw[->] (0) to[out=-18, in=108] node[rate, pos=0.48, above right] {$1$} (2);
+      \draw[->] (2) to[out=162, in=-72] node[rate, pos=0.48, below left] {$2$} (0);
+
+      \draw[->] (1) to[out=-162, in=72] node[rate, pos=0.48, above left] {$1$} (3);
+      \draw[->] (3) to[out=18, in=-108] node[rate, pos=0.48, below right] {$1$} (1);
+    \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.15cm}
+  \begin{center}
+    Grafo simétrico con etiquetas separadas para evitar cruces y encimamientos.
+  \end{center}
+\end{frame}
+
+\begin{frame}{Distribución estacionaria}
+  \begin{teorema}
+    Para una cadena irreducible en espacio finito, existe una única distribución $\pi$ tal que $\pi\A = 0$ y
+    \[ \lim_{t\to\infty} \PP_t = \mathbf{1}\pi. \]
+  \end{teorema}
+  
+  \vspace{0.3cm}
+  
+  Para el ejemplo de 4 estados: $\pi = (7/20, 1/5, 1/5, 1/4)$.
+\end{frame}
+
+\subsection{Interpretación con tiempos de espera}
+
+\begin{frame}{Tiempo hasta el primer salto}
+  \begin{teorema}
+    Sea $X_0 = x$ y $T = \inf\{t: X_t \neq x\}$. Entonces $T$ tiene distribución exponencial con parámetro $\alpha(x)$.
+  \end{teorema}
+  
+  \begin{proof}
+    Propiedad de pérdida de memoria y $\Prob\{T \leq \Delta t\} = \alpha(x)\Delta t + o(\Delta t)$.
+  \end{proof}
+  
+  \vspace{0.5cm}
+  
+  \begin{center}
+    \begin{tikzpicture}[scale=1.2]
+      \draw[->, thick] (0,0) -- (7,0) node[right] {$t$};
+      \draw[blue, thick] (0,0.3) -- (2.5,0.3) node[midway, above] {en $x$};
+      \fill[red] (2.5,0.3) circle (0.12) node[above] {$T$};
+      \draw[blue, thick] (2.5,0.3) -- (5,0.8) node[midway, above] {salta};
+      \node at (3.5,-0.8) {$T\sim\text{Exp}(\alpha(x))$};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Probabilidad del destino del salto}
+  \begin{teorema}
+    Condicionado a $T$, la probabilidad de saltar a $y \neq x$ es
+    \[ \Prob\{X_T = y\} = \frac{\alpha(x,y)}{\alpha(x)}. \]
+  \end{teorema}
+\end{frame}
+
+\begin{frame}{Probabilidad del destino del salto: demostración}
+  \begin{proof}
+    Para $y\neq x$, comparamos la probabilidad de que el primer salto ocurra en
+    $[t,t+\Delta t]$ y termine en $y$ con la probabilidad total de saltar en ese intervalo:
+    \[
+      \Prob\{X_T=y\mid T\in[t,t+\Delta t]\}
+      = \frac{e^{-\alpha(x)t}\alpha(x,y)\Delta t}{e^{-\alpha(x)t}\alpha(x)\Delta t} + o(1).
+    \]
+    Cancelando el factor común $e^{-\alpha(x)t}\Delta t$ y dejando $\Delta t\to 0$,
+    obtenemos
+    \[
+      \Prob\{X_T=y\} = \frac{\alpha(x,y)}{\alpha(x)}.
+    \]
+  \end{proof}
+\end{frame}
+
+\begin{frame}{Probabilidad del destino del salto: esquema}
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=1.25cm, thick, fill=gray!5},
+      rate/.style={font=\small, fill=white, inner sep=1.5pt},
+      >={stealth},
+      line width=1pt,
+      scale=1.08,
+      transform shape
+    ]
+      \node[state] (x) at (0,0) {$x$};
+      \node[state] (y1) at (4.8,2.2) {$y_1$};
+      \node[state] (y2) at (5.2,0) {$y_2$};
+      \node[state] (y3) at (4.8,-2.2) {$y_3$};
+
+      \draw[->] (x) -- node[rate, pos=0.56, above, sloped] {$\dfrac{\alpha(x,y_1)}{\alpha(x)}$} (y1);
+      \draw[->] (x) -- node[rate, pos=0.56, above] {$\dfrac{\alpha(x,y_2)}{\alpha(x)}$} (y2);
+      \draw[->] (x) -- node[rate, pos=0.56, below, sloped] {$\dfrac{\alpha(x,y_3)}{\alpha(x)}$} (y3);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Interpretación de los relojes}
+  \begin{observacion}[Relojes independientes]
+    En cada estado $y \neq x$ colocamos un reloj independiente que suena con tiempo exponencial de tasa $\alpha(x,y)$. La cadena permanece en $x$ hasta que suena el primer reloj y entonces salta al estado correspondiente.
+  \end{observacion}
+
+  \vspace{0.35cm}
+  \begin{block}{Idea central}
+    El \emph{mínimo} de esos relojes determina el tiempo de espera en $x$, y el reloj ganador determina el siguiente estado.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Relojes independientes: representación gráfica}
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=1.15cm, thick, fill=gray!5},
+      every node/.style={font=\small},
+      >={stealth},
+      scale=1.0,
+      transform shape
+    ]
+      \node[state] (x) at (0,0) {$x$};
+      \node[state] (y1) at (4.7,2.2) {$y_1$};
+      \node[state] (y2) at (4.7,0) {$y_2$};
+      \node[state] (y3) at (4.7,-2.2) {$y_3$};
+
+      \draw[dashed, ->, thick] (x) -- (y1) node[midway, above] {$\alpha(x,y_1)$};
+      \draw[dashed, ->, thick] (x) -- (y2) node[midway, above] {$\alpha(x,y_2)$};
+      \draw[dashed, ->, thick] (x) -- (y3) node[midway, below] {$\alpha(x,y_3)$};
+
+      \node[align=center] at (2.3,3.05) {Relojes exponenciales\\independientes};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\section{Galería de Imágenes}
+
+\begin{frame}{Visualización: convergencia estacionaria}
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.9\textwidth,
+        height=0.58\textheight,
+        xlabel={$t$},
+        ylabel={$p_t(0,0)$},
+        domain=0:5,
+        samples=100,
+        grid=major,
+        title={Convergencia a distribución estacionaria}
+      ]
+      \addplot[blue, thick] {2/3 + (1/3)*exp(-3*x)};
+      \addplot[red, dashed, thick] coordinates {(0,2/3) (5,2/3)};
+      \legend{{$p_t(0,0)$}, {$\pi(0)=2/3$}}
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Visualización: crecimiento del proceso de Yule}
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.9\textwidth,
+        height=0.58\textheight,
+        xlabel={$t$},
+        ylabel={$\E[X_t]$},
+        domain=0:3,
+        samples=100,
+        grid=major,
+        title={Crecimiento exponencial}
+      ]
+      \addplot[blue, thick] {exp(x)};
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Visualización: distribución estacionaria M/M/$\infty$}
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.9\textwidth,
+        height=0.58\textheight,
+        xlabel={$n$},
+        ylabel={$\pi(n)$},
+        domain=0:10,
+        samples=50,
+        grid=major,
+        title={Distribución estacionaria M/M/$\infty$}
+      ]
+      \addplot[blue, thick] {exp(-2)*2^x/x!};
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Visualización: probabilidades del proceso de Yule}
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.9\textwidth,
+        height=0.58\textheight,
+        xlabel={$t$},
+        ylabel={$P_n(t)$},
+        domain=0:3,
+        samples=100,
+        grid=major,
+        title={Proceso de Yule $P_n(t)$}
+      ]
+      \addplot[blue, thick] {exp(-x)};
+      \addplot[red, thick] {exp(-x)*(1-exp(-x))};
+      \addplot[green, thick] {exp(-x)*(1-exp(-x))^2};
+      \legend{{$n=1$}, {$n=2$}, {$n=3$}}
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Estructuras de cadenas de Markov I}
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=1cm, thick, fill=gray!5},
+      >={stealth},
+      ->, thick,
+      scale=1.15,
+      transform shape
+    ]
+      \node[state] (0) at (0,0) {$0$};
+      \node[state] (1) at (2.4,0) {$1$};
+      \path (0) edge[bend left=18] node[above] {$\lambda$} (1);
+      \path (1) edge[bend left=18] node[below] {$\mu$} (0);
+    \end{tikzpicture}
+
+    \vspace{0.25cm}
+    Cadena de 2 estados
+  \end{center}
+\end{frame}
+
+\begin{frame}{Estructuras de cadenas de Markov I: cadena de 4 estados}
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=1.0cm, thick, fill=gray!5},
+      every node/.style={font=\small},
+      >={stealth},
+      ->, thick,
+      scale=1.02,
+      transform shape
+    ]
+      \node[state] (0) at (0,3.0) {$0$};
+      \node[state] (1) at (4.0,3.0) {$1$};
+      \node[state] (2) at (4.0,-0.2) {$2$};
+      \node[state] (3) at (0,-0.2) {$3$};
+
+      \path (0) edge[bend left=14] node[above] {$\alpha$} (1);
+      \path (1) edge[bend left=14] node[below] {$\beta$} (0);
+      \path (1) edge[bend left=14] node[right] {$\alpha$} (2);
+      \path (2) edge[bend left=14] node[left] {$\alpha$} (1);
+      \path (2) edge[bend left=14] node[below] {$\alpha$} (3);
+      \path (3) edge[bend left=14] node[above] {$\alpha$} (2);
+      \path (3) edge[bend left=14] node[left] {$\alpha$} (0);
+      \path (0) edge[bend left=14] node[right] {$\alpha$} (3);
+      \path (0) edge[bend left=26] node[sloped, above] {$\alpha$} (2);
+      \path (2) edge[bend left=26] node[sloped, below] {$\beta$} (0);
+      \path (1) edge[bend left=26] node[sloped, above] {$\alpha$} (3);
+      \path (3) edge[bend left=26] node[sloped, below] {$\alpha$} (1);
+    \end{tikzpicture}
+
+    \vspace{0.25cm}
+    Cadena de 4 estados con mayor separación entre nodos y etiquetas.
+  \end{center}
+\end{frame}
+
+\begin{frame}{Estructuras de cadenas de Markov II}
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=0.8cm},
+      ->, >=stealth, thick, scale=1.05
+    ]
+      \node[state] (0) at (0,0) {$0$};
+      \node[state] (1) at (2.3,0) {$1$};
+      \node[state] (2) at (4.6,0) {$2$};
+      \node[state] (3) at (6.9,0) {$3$};
+      \node at (8.3,0) {$\cdots$};
+      \path (0) edge node[above] {$\lambda$} (1);
+      \path (1) edge node[above] {$\lambda$} (2);
+      \path (2) edge node[above] {$\lambda$} (3);
+      \path (1) edge[bend left] node[below] {$\mu$} (0);
+      \path (2) edge[bend left] node[below] {$\mu$} (1);
+      \path (3) edge[bend left] node[below] {$\mu$} (2);
+    \end{tikzpicture}
+  \end{center}
+
+  \begin{center}
+    Proceso de nacimiento--muerte
+  \end{center}
+\end{frame}
+
+\begin{frame}{Explosión en tiempo finito: esquema}
+  \begin{center}
+    \begin{tikzpicture}[scale=1.35]
+      \draw[->, thick] (0,0) -- (4.2,0) node[right] {$t$};
+      \draw[->, thick] (0,0) -- (0,3.2) node[above] {$X_t$};
+      \draw[blue, very thick] plot[smooth] coordinates {(0,0.08) (0.6,0.14) (1.2,0.38) (1.8,0.95) (2.2,1.55) (2.8,2.15) (3.15,2.75)};
+      \draw[red, dashed, very thick] (3.2,0) -- (3.2,2.95);
+      \node[below] at (3.2,0) {$Y_\infty$};
+    \end{tikzpicture}
+  \end{center}
+
+  \begin{center}
+    El proceso acumula infinitos saltos antes de un tiempo aleatorio finito.
+  \end{center}
+\end{frame}
+
+\begin{frame}{Estructuras de cadenas de Markov III}
+  \begin{center}
+    \begin{tikzpicture}[scale=1.15]
+      \draw (0,0) rectangle (3,3);
+      \node at (1.5,1.5) {$\A$};
+      \draw[red, thick] (1,0) -- (1,3);
+      \draw[red, thick] (0,1) -- (3,1);
+      \node at (0.55,2.45) {$\tilde{\A}$};
+    \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.4cm}
+  \begin{center}
+    Matriz reducida para tiempos medios de paso
+  \end{center}
+\end{frame}
+
+\section{Tiempos medios de paso}
+
+\begin{frame}{Definición}
+  \begin{definicion}
+    Sea $z$ un estado fijo. Definimos el \textbf{tiempo medio de paso} a $z$ comenzando en $x$ como
+    \[ b(x) = \E(Y \mid X_0 = x), \quad \text{donde } Y = \inf\{t: X_t = z\}. \]
+    Claramente $b(z) = 0$.
+  \end{definicion}
+  
+  \vspace{0.5cm}
+  
+  \begin{center}
+    \begin{tikzpicture}[scale=1.1]
+      \draw[->, thick] (0,0) -- (8,0) node[right] {$t$};
+      \draw[blue, thick] (0,1) -- (2,1) node[midway, above] {$x$};
+      \fill[red] (2,1) circle (0.1);
+      \draw[blue, thick] (2,1) -- (4,0.5) -- (5.5,0) -- (6.5,0.5);
+      \fill[green] (6.5,0.5) circle (0.1) node[above] {$z$};
+      \draw[<->, thick] (0,-0.8) -- (6.5,-0.8) node[midway, below] {$Y$};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Ecuación para los tiempos medios de paso}
+  \begin{teorema}
+    Para $x \neq z$, la función $b(x)$ satisface
+    \[ \alpha(x)b(x) = 1 + \sum_{y \neq x, z} \alpha(x,y) b(y). \]
+  \end{teorema}
+  
+  \begin{proof}
+    Condicionando en el primer salto:
+    \[ b(x) = \E(T) + \sum_y \Prob\{X_T=y\} b(y) = \frac{1}{\alpha(x)} + \sum_{y\neq x} \frac{\alpha(x,y)}{\alpha(x)} b(y). \]
+    Usando $b(z)=0$ y multiplicando por $\alpha(x)$ obtenemos la ecuación.
+  \end{proof}
+\end{frame}
+
+\begin{frame}{Forma matricial}
+  \begin{corolario}
+    Sea $\tilde{\A}$ la matriz obtenida de $\A$ eliminando la fila y columna correspondientes al estado $z$.
+    Sea $\bar{b}$ el vector de tiempos medios para $x \neq z$. Entonces
+    \[
+      \tilde{\A}\,\bar{b} = -\bar{1}.
+    \]
+    En consecuencia,
+    \[
+      \bar{b} = [-\tilde{\A}]^{-1}\bar{1}.
+    \]
+  \end{corolario}
+
+  \vspace{0.2cm}
+  \begin{center}
+    \begin{tikzpicture}[scale=0.58, transform shape]
+      \draw[line width=0.9pt] (0,0) rectangle (4,4);
+      \node at (2,2) {$\A$};
+      \draw[red, line width=1pt] (1.5,0) -- (1.5,4);
+      \draw[red, line width=1pt] (0,1.5) -- (4,1.5);
+      \node[fill=white, inner sep=1pt] at (0.75,3.2) {$\tilde{\A}$};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}[t]{Ejemplo numérico}
+  Para la cadena de 4 estados con $z=3$:
+  \[ \tilde{\A} = \begin{pmatrix}
+    -3 & 1 & 1 \\
+    2 & -4 & 1 \\
+    2 & 1 & -4
+  \end{pmatrix}. \]
+  
+  Resolvemos $-\tilde{\A}\bar{b} = \bar{1}$:
+  \[ \begin{cases}
+    3b_0 - b_1 - b_2 = 1 \\
+    -2b_0 + 4b_1 - b_2 = 1 \\
+    -2b_0 - b_1 + 4b_2 = 1
+  \end{cases} \]
+  
+  Solución: $b_0 = b_1 = b_2 = 1$.
+  
+  \vspace{0.3cm}
+  
+  El tiempo esperado del estado 0 al estado 3 es 1.
+\end{frame}
+
+\section{Procesos de Nacimiento y Muerte}
+
+\begin{frame}{Definición}
+  \begin{definicion}
+    Un \textbf{proceso de nacimiento y muerte} es una cadena de Markov en tiempo continuo con espacio de estados $\{0,1,2,\ldots\}$ donde los únicos cambios posibles son:
+    \begin{itemize}
+      \item $n \to n+1$ (nacimiento) con tasa $\lambda_n \geq 0$
+      \item $n \to n-1$ (muerte) con tasa $\mu_n \geq 0$, $\mu_0 = 0$
+    \end{itemize}
+  \end{definicion}
+  
+  \vspace{0.5cm}
+  
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=0.9cm},
+      ->, >=stealth, thick
+    ]
+      \node[state] (0) at (0,0) {$0$};
+      \node[state] (1) at (2.5,0) {$1$};
+      \node[state] (2) at (5,0) {$2$};
+      \node[state] (3) at (7.5,0) {$3$};
+      \node at (9,0) {$\cdots$};
+      
+      \path (0) edge node[above] {$\lambda_0$} (1);
+      \path (1) edge node[above] {$\lambda_1$} (2);
+      \path (2) edge node[above] {$\lambda_2$} (3);
+      \path (1) edge[bend left] node[below] {$\mu_1$} (0);
+      \path (2) edge[bend left] node[below] {$\mu_2$} (1);
+      \path (3) edge[bend left] node[below] {$\mu_3$} (2);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Probabilidades infinitesimales}
+  \begin{align*}
+    \Prob\{X_{t+\Delta t} = n \mid X_t = n\} &= 1 - (\lambda_n + \mu_n)\Delta t + o(\Delta t),\\
+    \Prob\{X_{t+\Delta t} = n+1 \mid X_t = n\} &= \lambda_n \Delta t + o(\Delta t),\\
+    \Prob\{X_{t+\Delta t} = n-1 \mid X_t = n\} &= \mu_n \Delta t + o(\Delta t).
+  \end{align*}
+\end{frame}
+
+\begin{frame}{Probabilidades infinitesimales: esquema del salto}
+  \begin{center}
+    \begin{tikzpicture}[
+      scale=1.08,
+      transform shape,
+      state/.style={circle, draw, minimum size=1.15cm, thick, fill=gray!5},
+      >={stealth},
+      ->, thick,
+      every node/.style={font=\small}
+    ]
+      \node[state] (n) at (0,0) {$n$};
+      \node[state] (np1) at (4.2,1.8) {$n+1$};
+      \node[state] (nm1) at (4.2,-1.8) {$n-1$};
+      
+      \path (n) edge node[above] {$\lambda_n\Delta t$} (np1);
+      \path (n) edge node[below] {$\mu_n\Delta t$} (nm1);
+      \path (n) edge[loop above, min distance=1.8cm] node {$1-(\lambda_n+\mu_n)\Delta t$} (n);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Ecuaciones diferenciales}
+  \begin{proposicion}
+    Las probabilidades $P_n(t) = \Prob\{X_t = n\}$ satisfacen:
+    \[ P_n'(t) = \mu_{n+1}P_{n+1}(t) + \lambda_{n-1}P_{n-1}(t) - (\mu_n + \lambda_n)P_n(t). \]
+    con $\lambda_{-1}=0$, $\mu_0=0$.
+  \end{proposicion}
+  
+  \vspace{0.5cm}
+  
+  \begin{center}
+    \begin{tikzpicture}[scale=1.1]
+      \node at (0,1.2) {$\mu_{n+1}P_{n+1}$};
+      \node at (0,0) {$\lambda_{n-1}P_{n-1}$};
+      \node at (0,-1.2) {$-(\mu_n+\lambda_n)P_n$};
+      \draw[->, thick] (1,1.2) -- (3,0.6) node[midway, above] {flujo};
+      \draw[->, thick] (1,0) -- (3,-0.6) node[midway, above] {flujo};
+      \node[circle, draw, minimum size=1cm, thick] at (4,0) {$P_n'$};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\subsection{Ejemplos}
+
+\begin{frame}{Ejemplo 1: Proceso de Poisson}
+  \begin{ejemplo}
+    $\lambda_n = \lambda$, $\mu_n = 0$ para todo $n$.
+  \end{ejemplo}
+  
+  \vspace{0.3cm}
+  
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=0.9cm},
+      ->, >=stealth, thick
+    ]
+      \node[state] (0) at (0,0) {$0$};
+      \node[state] (1) at (2.5,0) {$1$};
+      \node[state] (2) at (5,0) {$2$};
+      \node[state] (3) at (7.5,0) {$3$};
+      \node at (9,0) {$\cdots$};
+      
+      \path (0) edge node[above] {$\lambda$} (1);
+      \path (1) edge node[above] {$\lambda$} (2);
+      \path (2) edge node[above] {$\lambda$} (3);
+    \end{tikzpicture}
+  \end{center}
+  
+  \vspace{0.3cm}
+  
+  Ecuaciones: $P_n'(t) = \lambda P_{n-1}(t) - \lambda P_n(t)$.
+  
+  Solución: $P_n(t) = e^{-\lambda t}\frac{(\lambda t)^n}{n!}$.
+\end{frame}
+
+\begin{frame}{Ejemplo 2: Cola M/M/1}
+  \begin{ejemplo}
+    Un servidor, llegadas Poisson con tasa $\lambda$, servicios exponenciales con tasa $\mu$.
+    \[ \lambda_n = \lambda,\quad \mu_n = \mu\ (n\ge 1),\ \mu_0=0. \]
+  \end{ejemplo}
+  
+  \vspace{0.3cm}
+  
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=0.9cm},
+      ->, >=stealth, thick
+    ]
+      \node[state] (0) at (0,0) {$0$};
+      \node[state] (1) at (2.5,0) {$1$};
+      \node[state] (2) at (5,0) {$2$};
+      \node[state] (3) at (7.5,0) {$3$};
+      \node at (9,0) {$\cdots$};
+      
+      \path (0) edge node[above] {$\lambda$} (1);
+      \path (1) edge node[above] {$\lambda$} (2);
+      \path (2) edge node[above] {$\lambda$} (3);
+      \path (1) edge[bend left] node[below] {$\mu$} (0);
+      \path (2) edge[bend left] node[below] {$\mu$} (1);
+      \path (3) edge[bend left] node[below] {$\mu$} (2);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Ejemplo 3: Cola M/M/k}
+  \begin{ejemplo}
+    $k$ servidores, cada uno sirve a tasa $\mu$.
+    \[ \lambda_n = \lambda,\quad \mu_n = \min(n,k)\mu. \]
+  \end{ejemplo}
+  
+  \vspace{0.3cm}
+  
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=0.8cm},
+      ->, >=stealth, thick, scale=0.9
+    ]
+      \node[state] (0) at (0,0) {$0$};
+      \node[state] (1) at (1.8,0) {$1$};
+      \node[state] (2) at (3.6,0) {$2$};
+      \node[state] (k1) at (6,0) {$k-1$};
+      \node[state] (k) at (7.8,0) {$k$};
+      \node[state] (kp1) at (9.6,0) {$k+1$};
+      \node at (11,0) {$\cdots$};
+      
+      \path (0) edge node[above] {$\lambda$} (1);
+      \path (1) edge node[above] {$\lambda$} (2);
+      \path (2) edge node[above, font=\small] {$\lambda$} (k1);
+      \path (k1) edge node[above, font=\small] {$\lambda$} (k);
+      \path (k) edge node[above, font=\small] {$\lambda$} (kp1);
+      
+      \path (1) edge[bend left] node[below, font=\small] {$\mu$} (0);
+      \path (2) edge[bend left] node[below, font=\small] {$2\mu$} (1);
+      \path (k1) edge[bend left] node[below, font=\small] {$(k-1)\mu$} (2);
+      \path (k) edge[bend left] node[below, font=\small] {$k\mu$} (k1);
+      \path (kp1) edge[bend left] node[below, font=\small] {$k\mu$} (k);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Ejemplo 4: Cola M/M/$\infty$}
+  \begin{ejemplo}
+    Infinitos servidores: cada persona en cola es servida inmediatamente.
+    \[ \lambda_n = \lambda,\quad \mu_n = n\mu. \]
+  \end{ejemplo}
+  
+  \vspace{0.3cm}
+  
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=0.9cm},
+      ->, >=stealth, thick
+    ]
+      \node[state] (0) at (0,0) {$0$};
+      \node[state] (1) at (2.5,0) {$1$};
+      \node[state] (2) at (5,0) {$2$};
+      \node[state] (3) at (7.5,0) {$3$};
+      \node at (9,0) {$\cdots$};
+      
+      \path (0) edge node[above] {$\lambda$} (1);
+      \path (1) edge node[above] {$\lambda$} (2);
+      \path (2) edge node[above] {$\lambda$} (3);
+      \path (1) edge[bend left] node[below] {$\mu$} (0);
+      \path (2) edge[bend left] node[below] {$2\mu$} (1);
+      \path (3) edge[bend left] node[below] {$3\mu$} (2);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Ejemplo 5: Modelo de población}
+  \begin{ejemplo}
+    Cada individuo produce descendencia a tasa $\lambda$ y muere a tasa $\mu$, independientemente.
+    \[ \lambda_n = n\lambda,\quad \mu_n = n\mu. \]
+  \end{ejemplo}
+  
+  \vspace{0.3cm}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.8\textwidth,
+        height=0.4\textheight,
+        xlabel={$t$},
+        ylabel={$\E[X_t]$},
+        domain=0:3,
+        samples=100,
+        grid=major,
+        title={Crecimiento/Decrecimiento poblacional}
+      ]
+      \addplot[blue, thick] {exp(x)};
+      \addplot[red, thick] {exp(-x)};
+      \legend{{$\lambda>\mu$}, {$\lambda<\mu$}}
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Ejemplo 6: Crecimiento rápido}
+  \begin{ejemplo}
+    $\lambda_n = n^2\lambda$, $\mu_n = 0$.
+  \end{ejemplo}
+  
+  \vspace{0.3cm}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.8\textwidth,
+        height=0.4\textheight,
+        xlabel={$t$},
+        ylabel={$X_t$},
+        domain=0:3.5,
+        samples=100,
+        grid=major,
+        title={Explosión en tiempo finito}
+      ]
+      \addplot[blue, thick] {2/(1+exp(-8*(x-2)))};
+      \addplot[red, dashed, thick] coordinates {(3.2,0) (3.2,2)};
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+  
+  \begin{center}
+    $\displaystyle Y_\infty = \sum_{i=1}^\infty \frac{1}{i^2\lambda} = \frac{\pi^2}{6\lambda} < \infty$
+  \end{center}
+\end{frame}
+
+\subsection{Clasificación}
+
+\begin{frame}{Criterio de transiencia}
+  \begin{teorema}
+    Un proceso de nacimiento y muerte irreducible es \textbf{transitorio} si y solo si
+    \[ \sum_{n=1}^{\infty} \frac{\mu_1 \mu_2 \cdots \mu_n}{\lambda_1 \lambda_2 \cdots \lambda_n} < \infty. \]
+  \end{teorema}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.7\textwidth,
+        height=0.3\textheight,
+        xlabel={$n$},
+        ylabel={término $n$-ésimo},
+        domain=1:10,
+        samples=50,
+        grid=major
+      ]
+      \addplot[blue, thick] {1/x};
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+  
+  \begin{center}
+    Convergencia $\Rightarrow$ transiencia
+  \end{center}
+\end{frame}
+
+\begin{frame}{Criterio de recurrencia positiva}
+  \begin{teorema}
+    Un proceso de nacimiento y muerte irreducible es \textbf{positivamente recurrente} si y solo si
+    \[ \sum_{n=0}^{\infty} \frac{\lambda_0 \lambda_1 \cdots \lambda_{n-1}}{\mu_1 \mu_2 \cdots \mu_n} < \infty. \]
+    En tal caso, la distribución estacionaria es
+    \[ \pi(n) = \frac{\lambda_0 \lambda_1 \cdots \lambda_{n-1}}{\mu_1 \mu_2 \cdots \mu_n} \cdot \frac{1}{C}, \]
+    donde $C$ es la suma de la serie.
+  \end{teorema}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.7\textwidth,
+        height=0.3\textheight,
+        xlabel={$n$},
+        ylabel={$\pi(n)$},
+        domain=0:10,
+        samples=50,
+        grid=major
+      ]
+      \addplot[blue, thick] {exp(-x)};
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Clasificación de colas M/M}
+  \begin{center}
+    \begin{tabular}{|c|c|c|c|}
+      \hline
+      Modelo & Transitoria & Positivamente recurrente & Distribución $\pi(n)$ \\
+      \hline
+      M/M/1 & $\mu < \lambda$ & $\lambda < \mu$ & $(1-\rho)\rho^n$, $\rho=\lambda/\mu$ \\
+      \hline
+      M/M/k & $k\mu < \lambda$ & $\lambda < k\mu$ & fórmula complicada \\
+      \hline
+      M/M/$\infty$ & nunca & siempre & $e^{-\lambda/\mu}\frac{(\lambda/\mu)^n}{n!}$ \\
+      \hline
+    \end{tabular}
+  \end{center}
+  
+  \vspace{0.5cm}
+  Para M/M/1: $\displaystyle \E[X] = \frac{\lambda}{\mu-\lambda}$.
+  
+  Para M/M/$\infty$: $\E[X] = \frac{\lambda}{\mu}$.
+\end{frame}
+
+\section{Procesos de Nacimiento Puro}
+
+\begin{frame}{Proceso de Yule}
+  \begin{definicion}
+    Proceso de Yule: $\lambda_n = n\lambda$, $\mu_n = 0$, $X_0 = 1$.
+  \end{definicion}
+  
+  \begin{teorema}
+    Las probabilidades son
+    \[ P_n(t) = e^{-\lambda t}(1 - e^{-\lambda t})^{n-1}, \quad n \ge 1. \]
+  \end{teorema}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.8\textwidth,
+        height=0.3\textheight,
+        xlabel={$t$},
+        ylabel={$P_n(t)$},
+        domain=0:3,
+        samples=100,
+        legend pos=north east,
+        grid=major
+      ]
+      \addplot[blue, thick] {exp(-x)};
+      \addplot[red, thick] {exp(-x)*(1-exp(-x))};
+      \addplot[green, thick] {exp(-x)*(1-exp(-x))^2};
+      \legend{{$n=1$}, {$n=2$}, {$n=3$}}
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Propiedades del proceso de Yule}
+  \begin{proposicion}
+    Para el proceso de Yule:
+    \begin{itemize}
+      \item Esperanza: $\E[X_t] = e^{\lambda t}$
+      \item Tiempo hasta $n$ individuos: $\displaystyle\E[Y_n] = \sum_{i=1}^{n-1} \frac{1}{i\lambda} \sim \frac{\ln n}{\lambda}$
+    \end{itemize}
+  \end{proposicion}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.8\textwidth,
+        height=0.3\textheight,
+        xlabel={$t$},
+        ylabel={$\E[X_t]$},
+        domain=0:3,
+        samples=100,
+        grid=major
+      ]
+      \addplot[blue, thick] {exp(x)};
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Explosión en tiempo finito}
+  \begin{ejemplo}[Crecimiento rápido]
+    $\lambda_n = n^2\lambda$, $\mu_n = 0$, $X_0 = 1$.
+  \end{ejemplo}
+  
+  El tiempo para alcanzar $n$ es $Y_n = \sum_{i=1}^{n-1} T_i$ con $T_i \sim \text{Exp}(i^2\lambda)$. Entonces
+  \[ \E[Y_\infty] = \sum_{i=1}^\infty \frac{1}{i^2\lambda} = \frac{\pi^2}{6\lambda} < \infty. \]
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.8\textwidth,
+        height=0.3\textheight,
+        xlabel={$t$},
+        ylabel={$X_t$},
+        domain=0:3.5,
+        samples=100,
+        grid=major
+      ]
+      \addplot[blue, thick] {2/(1+exp(-8*(x-2)))};
+      \addplot[red, dashed, thick] coordinates {(3.2,0) (3.2,2)};
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+  
+  \begin{center}
+    ¡La población se vuelve infinita en tiempo finito con probabilidad 1!
+  \end{center}
+\end{frame}
+
+\section{Aplicaciones en Inteligencia Artificial}
+
+\begin{frame}[t]{Modelos de Lenguaje (LLMs): idea básica}
+  \begin{block}{Generación de texto}
+    Los modelos como GPT pueden verse, de manera simplificada, como sistemas que pasan de un contexto a otro:
+    \begin{itemize}
+      \item estados = secuencias o contextos de tokens,
+      \item transiciones = probabilidad o intensidad del siguiente token,
+      \item evolución = actualización sucesiva del contexto.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[t]{Modelos de Lenguaje (LLMs): grafo de transición}
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={rectangle, draw, minimum width=1.7cm, minimum height=0.85cm, rounded corners, thick, fill=gray!5},
+      >={stealth},
+      ->, thick,
+      every node/.style={font=\small},
+      scale=1.05,
+      transform shape
+    ]
+      \node[state] (s1) at (0,1.6) {``el''};
+      \node[state] (s2) at (3.4,2.4) {``gato''};
+      \node[state] (s3) at (3.4,1.2) {``perro''};
+      \node[state] (s4) at (3.4,0) {``coche''};
+      
+      \path (s1) edge node[above, sloped] {$\alpha$} (s2);
+      \path (s1) edge node[above] {$\beta$} (s3);
+      \path (s1) edge node[below, sloped] {$\gamma$} (s4);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}[t]{Modelos de Lenguaje (LLMs): atención y tiempos}
+  \begin{block}{Interpretación cualitativa}
+    \begin{itemize}
+      \item Tiempos de atención $\leftrightarrow$ tiempos de salto.
+      \item Mecanismo de atención $\leftrightarrow$ pesos o tasas de transición.
+      \item Estabilidad de la generación $\leftrightarrow$ comportamiento estacionario.
+    \end{itemize}
+  \end{block}
+
+  \begin{center}
+    \begin{tikzpicture}[scale=1.05, transform shape]
+      \draw[->, thick] (0,0) -- (4.4,0) node[right] {tiempo};
+      \foreach \x/\t in {0.6/a, 1.6/b, 2.7/c, 3.8/d} {
+        \draw[blue, thick] (\x,0.1) -- (\x,0.55);
+        \node at (\x,0.8) {\t};
+      }
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}[t]{Procesos de Decisión Markovianos (MDP)}
+  \begin{block}{Aprendizaje por refuerzo}
+    \begin{itemize}
+      \item Q-learning: estima recompensas y decisiones futuras.
+      \item Políticas óptimas: seleccionan acciones que modifican la dinámica.
+      \item Exploración vs. explotación: balance entre probar y estabilizarse.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[t]{MDP: esquema de estados y acciones}
+  \begin{center}
+    \begin{tikzpicture}[
+      state/.style={circle, draw, minimum size=1.05cm, thick, fill=gray!5},
+      >={stealth},
+      ->, thick,
+      every node/.style={font=\small},
+      scale=1.08,
+      transform shape
+    ]
+      \node[state] (s1) at (0,1) {$s_1$};
+      \node[state] (s2) at (2.4,2.2) {$s_2$};
+      \node[state] (s3) at (2.4,-0.2) {$s_3$};
+      \node[state] (s4) at (5,1) {$s_4$};
+      
+      \path (s1) edge node[above, sloped] {$a_1$} (s2);
+      \path (s1) edge node[below, sloped] {$a_2$} (s3);
+      \path (s2) edge node[above] {$a_3$} (s4);
+      \path (s3) edge node[below] {$a_4$} (s4);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}[t]{MDP: Bellman en tiempo continuo}
+  \begin{block}{Ecuación de Bellman}
+    \[
+      V(x) = \max_a \left\{ r(x,a)\Delta t + e^{-\beta\Delta t}\E[V(x')] \right\}
+    \]
+
+    En el límite $\Delta t\to 0$:
+    \[
+      \beta V(x) = \max_a \left\{ r(x,a) + \mathcal{A}_a V(x) \right\},
+    \]
+    donde $\mathcal{A}_a$ es el generador asociado a la acción $a$.
+  \end{block}
+\end{frame}
+
+\begin{frame}[t]{Redes de Neuronas Espike (SNN)}
+  \begin{columns}
+    \column{0.5\textwidth}
+    \begin{center}
+      \begin{tikzpicture}[
+        neuron/.style={circle, draw, minimum size=0.8cm},
+        ->, >=stealth, thick
+      ]
+        \foreach \i in {1,2,3} {
+          \node[neuron] (n\i) at (0,1.5*\i-2) {$n_\i$};
+        }
+        \node[neuron] (out) at (3,1) {$out$};
+        
+        \path (n1) edge node[above, sloped, font=\tiny] {$\alpha_{1}$} (out);
+        \path (n2) edge node[above, font=\tiny] {$\alpha_{2}$} (out);
+        \path (n3) edge node[below, sloped, font=\tiny] {$\alpha_{3}$} (out);
+      \end{tikzpicture}
+    \end{center}
+    
+    \begin{block}{Modelado con procesos de nacimiento}
+      \begin{itemize}
+        \item Potencial de membrana = estado
+        \item Llegada de spikes = nacimientos
+        \item Disparo = muerte (reset)
+      \end{itemize}
+    \end{block}
+    
+    \column{0.5\textwidth}
+    \begin{block}{Tasas de disparo}
+      \begin{align*}
+        \lambda_n &= \text{tasa de entrada}\\
+        \mu_n &= \text{tasa de disparo}\\
+        \Prob\{\text{disparo}\} &= \frac{\mu_n}{\lambda_n+\mu_n}
+      \end{align*}
+      
+      \vspace{0.3cm}
+      \begin{center}
+        \begin{tikzpicture}
+          \draw[->, thick] (0,0) -- (4,0);
+          \foreach \x in {0.3,0.8,1.5,2.2,3.1} {
+            \draw[blue, thick] (\x,0) -- (\x,0.3);
+          }
+        \end{tikzpicture}
+      \end{center}
+    \end{block}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{Sistemas de Recomendación}
+  \begin{columns}
+    \column{0.5\textwidth}
+    \begin{center}
+      \begin{tikzpicture}[
+        item/.style={rectangle, draw, minimum width=1.2cm, minimum height=0.8cm},
+        ->, >=stealth, thick
+      ]
+        \node[item] (i1) at (0,2) {Item 1};
+        \node[item] (i2) at (2,2.5) {Item 2};
+        \node[item] (i3) at (2,1.5) {Item 3};
+        \node[item] (i4) at (4,2) {Item 4};
+        
+        \path (i1) edge node[above, sloped, font=\tiny] {$\alpha_{12}$} (i2);
+        \path (i1) edge node[below, sloped, font=\tiny] {$\alpha_{13}$} (i3);
+        \path (i2) edge node[above, sloped, font=\tiny] {$\alpha_{24}$} (i4);
+        \path (i3) edge node[below, sloped, font=\tiny] {$\alpha_{34}$} (i4);
+      \end{tikzpicture}
+    \end{center}
+    
+    \begin{block}{Filtrado colaborativo}
+      \begin{itemize}
+        \item Usuarios = cadenas de Markov
+        \item Transiciones = preferencias
+        \item Recomendaciones = estados más probables
+      \end{itemize}
+    \end{block}
+    
+    \column{0.5\textwidth}
+    \begin{block}{Tiempos medios de recomendación}
+      \[ b(x) = \frac{1}{\alpha(x)} + \sum_{y\neq x,z} \frac{\alpha(x,y)}{\alpha(x)} b(y) \]
+      
+      \begin{center}
+        \begin{tikzpicture}
+          \begin{axis}[
+            width=\textwidth,
+            height=0.3\textheight,
+            xlabel={ítem},
+            ylabel={probabilidad},
+            ybar,
+            bar width=0.5cm
+          ]
+            \addplot coordinates {(1,0.3) (2,0.5) (3,0.2)};
+          \end{axis}
+        \end{tikzpicture}
+      \end{center}
+    \end{block}
+  \end{columns}
+\end{frame}
+
+\section{Ecuaciones Forward y Backward}
+
+\begin{frame}{Ecuaciones backward}
+  Condicionando en el primer intervalo:
+  \[ p_{t+\Delta t}(x,y) = \sum_z p_{\Delta t}(x,z) p_t(z,y). \]
+  
+  Usando probabilidades infinitesimales:
+  \begin{align*}
+    p_{t+\Delta t}(x,y) &= (1-\alpha(x)\Delta t)p_t(x,y) + \sum_{z\neq x} \alpha(x,z)\Delta t\, p_t(z,y) + o(\Delta t).
+  \end{align*}
+  
+  Tomando $\Delta t\to 0$:
+  \[ \frac{\partial}{\partial t} p_t(x,y) = -\alpha(x)p_t(x,y) + \sum_{z\neq x} \alpha(x,z)p_t(z,y). \]
+  
+  En forma matricial: $\displaystyle\frac{d}{dt}\PP_t = \A\PP_t$.
+\end{frame}
+
+\begin{frame}{Ecuaciones forward}
+  Condicionando en el último intervalo:
+  \[ p_{t+\Delta t}(x,y) = \sum_z p_t(x,z) p_{\Delta t}(z,y). \]
+  
+  Usando probabilidades infinitesimales:
+  \begin{align*}
+    p_{t+\Delta t}(x,y) &= p_t(x,y)(1-\alpha(y)\Delta t) + \sum_{z\neq y} p_t(x,z)\alpha(z,y)\Delta t + o(\Delta t).
+  \end{align*}
+  
+  Tomando $\Delta t\to 0$:
+  \[ \frac{\partial}{\partial t} p_t(x,y) = -\alpha(y)p_t(x,y) + \sum_{z\neq y} \alpha(z,y)p_t(x,z). \]
+  
+  En forma matricial: $\displaystyle\frac{d}{dt}\PP_t = \PP_t\A$.
+\end{frame}
+
+\begin{frame}{Comparación}
+  \begin{center}
+    \begin{tabular}{|c|c|}
+      \hline
+      \textbf{Backward} & \textbf{Forward} \\
+      \hline
+      $\frac{d}{dt}\PP_t = \A\PP_t$ & $\frac{d}{dt}\PP_t = \PP_t\A$ \\
+      \hline
+      Condiciona en $X_0$ & Condiciona en $X_t$ \\
+      \hline
+      Siempre válidas & Requieren regularidad \\
+      \hline
+    \end{tabular}
+  \end{center}
+  
+  \vspace{0.5cm}
+  
+  Para espacios finitos, ambas tienen la misma solución:
+  \[ \PP_t = e^{t\A}. \]
+  
+  \vspace{0.3cm}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \node at (0,0) {$e^{t\A}$};
+      \draw[->, thick] (-1.5,0.5) -- (1.5,0.5) node[midway, above] {backward};
+      \draw[->, thick] (-1.5,-0.5) -- (1.5,-0.5) node[midway, below] {forward};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Resumen visual}
+  \begin{center}
+    \begin{tikzpicture}[
+      scale=0.64,
+      transform shape,
+      node distance=1.55cm,
+      block/.style={rectangle, draw, minimum width=3.1cm, minimum height=0.9cm, rounded corners, thick, fill=gray!5, align=center}
+    ]
+      \node[block] (tasas) at (0,0) {Tasas $\alpha(x,y)$};
+      \node[block] (gen) at (0,-1.7) {Generador $\A$};
+      \node[block] (exp) at (0,-3.4) {$\PP_t = e^{t\A}$};
+      \node[block] (est) at (4.9,-1.7) {Distribución\\estacionaria $\pi$};
+      \node[block] (tiempos) at (-4.9,-1.7) {Tiempos medios\\de paso};
+      \node[block] (bd) at (0,-5.15) {Nacimiento--muerte};
+
+      \draw[->, thick] (tasas) -- (gen);
+      \draw[->, thick] (gen) -- (exp);
+      \draw[->, thick] (gen) -- (est);
+      \draw[->, thick] (gen) -- (tiempos);
+      \draw[->, thick] (exp) -- (bd);
+
+      \node[draw, rounded corners, thick, fill=white, align=center, inner sep=4pt, text width=4.55cm] at (-5.9,-4.55) {
+        $\pi\A = 0$ \\[3pt]
+        $\alpha(x)b(x)=1+\sum_{y\neq x,z}\alpha(x,y)b(y)$
+      };
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Aplicaciones en IA - Resumen}
+  \small
+  \begin{center}
+    \begin{tabular}{|p{0.34\textwidth}|p{0.46\textwidth}|}
+      \hline
+      \textbf{Aplicación IA} & \textbf{Concepto CTMC} \\
+      \hline
+      Modelos de lenguaje & Transiciones entre tokens y tiempos de atención \\
+      Aprendizaje por refuerzo & MDP en tiempo continuo \\
+      Redes SNN & Nacimiento y muerte de spikes \\
+      Sistemas de recomendación & Tiempos medios de paso \\
+      Optimización & Distribución estacionaria y estabilidad \\
+      \hline
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Ventajas del modelado en tiempo continuo}
+  \begin{block}{Ventajas principales}
+    \begin{itemize}
+      \item Captura dinámicas asíncronas.
+      \item Modela eventos en tiempo real.
+      \item Generaliza procesos discretos.
+      \item Permite análisis de convergencia y estabilidad.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\end{document}

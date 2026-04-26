@@ -1,0 +1,721 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathrsfs}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, matrix, automata, calc, decorations.pathreplacing, babel}
+\usepackage{dsfont}
+\usepackage{xcolor}
+
+% Configuración de estilos
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\renewcommand{\baselinestretch}{1.1}
+
+% Teoremas, definiciones, etc.
+\theoremstyle{plain}
+\newtheorem{teorema}{Teorema}[section]
+\newtheorem{proposicion}[teorema]{Proposición}
+\newtheorem{lema}[teorema]{Lema}
+\newtheorem{corolario}[teorema]{Corolario}
+
+\theoremstyle{definition}
+\newtheorem{definicion}[teorema]{Definición}
+\newtheorem{ejemplo}[teorema]{Ejemplo}
+\newtheorem{observacion}[teorema]{Observación}
+
+\theoremstyle{remark}
+\newtheorem{nota}[teorema]{Nota}
+\newtheorem{ejercicio}[teorema]{Ejercicio}
+
+% Comandos útiles
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\1}{\mathds{1}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\abs}[1]{\left\lvert #1 \right\rvert}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\paren}[1]{\left( #1 \right)}
+\newcommand{\braces}[1]{\left\{ #1 \right\}}
+\newcommand{\bracks}[1]{\left[ #1 \right]}
+\newcommand{\angles}[1]{\left\langle #1 \right\rangle}
+
+\newcommand{\conv}{\ast}
+
+\title{Cadenas de Markov con espacio de estados infinito numerable}
+\author{César Galindo}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Demostraciones Detalladas de los Resultados Fundamentales}
+
+En esta nota se presentan demostraciones autocontenidas de varios resultados clásicos para cadenas de Markov con espacio de estados numerable. La idea general es enfatizar tres principios que aparecen de forma repetida: el análisis del primer paso, la propiedad de Markov (y su versión fuerte) y el uso de funciones de potencial, funciones armónicas o distribuciones invariantes.
+
+Cuando alguna demostración estándar requiere hipótesis adicionales o un teorema externo, se indica explícitamente. Esto permite distinguir entre las partes completamente elementales y las partes que normalmente se apoyan en resultados más profundos de la teoría.
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[
+box/.style={draw, rounded corners, fill=blue!6, minimum width=3.2cm, minimum height=0.9cm, align=center},
+arrow/.style={-{Latex[length=3mm]}, thick}
+]
+\node[box] (a) {Análisis del\\ primer paso};
+\node[box, right=1.5cm of a] (b) {Propiedad de Markov\\ y Markov fuerte};
+\node[box, right=1.5cm of b] (c) {Funciones de potencial,\\ martingalas e invariancia};
+\draw[arrow] (a) -- (b);
+\draw[arrow] (b) -- (c);
+\node[below=0.9cm of b, align=center] {\small Tres ideas guía que reaparecen en casi todas las demostraciones de esta nota.};
+\end{tikzpicture}
+\caption{Arquitectura conceptual del capítulo.}
+\end{figure}
+
+
+\subsection{Demostración de la Ecuación de Chapman-Kolmogorov}
+
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[
+state/.style={circle, draw, fill=blue!5, minimum size=9mm},
+arrow/.style={-{Latex[length=2.7mm]}, thick}
+]
+\node[state] (x) at (0,0) {$x$};
+\node[state] (z) at (3,0) {$z$};
+\node[state] (y) at (6,0) {$y$};
+\draw[arrow] (x) -- node[above] {$m$ pasos} (z);
+\draw[arrow] (z) -- node[above] {$n$ pasos} (y);
+\node[align=center, below=0.8cm of z] {\small Se descompone la trayectoria total según el estado intermedio \(X_m=z\).};
+\end{tikzpicture}
+\caption{Idea geométrica detrás de Chapman--Kolmogorov.}
+\end{figure}
+
+
+
+\begin{teorema}[Chapman-Kolmogorov]
+Para una cadena de Markov con espacio de estados numerable \(S\) y probabilidades de transición \(p_n(x,y)\), se cumple:
+\[
+p_{m+n}(x,y) = \sum_{z\in S} p_m(x,z) p_n(z,y), \quad \forall x,y\in S, \forall m,n\geq 0.
+\]
+\end{teorema}
+
+\begin{proof}
+La demostración utiliza la propiedad de Markov y el teorema de probabilidad total. Descomponemos según el estado en el tiempo intermedio \(m\):
+
+\[
+\begin{aligned}
+p_{m+n}(x,y) &= \mathbb{P}\{X_{m+n}=y \mid X_0=x\} \\
+&= \sum_{z\in S} \mathbb{P}\{X_{m+n}=y, X_m=z \mid X_0=x\} \quad \text{(partición por }X_m\text{)} \\
+&= \sum_{z\in S} \mathbb{P}\{X_m=z \mid X_0=x\} \cdot \mathbb{P}\{X_{m+n}=y \mid X_m=z, X_0=x\}.
+\end{aligned}
+\]
+
+Por la propiedad de Markov, el futuro después del tiempo \(m\) depende sólo del presente \(X_m=z\), no del pasado \(X_0=x\):
+
+\[
+\mathbb{P}\{X_{m+n}=y \mid X_m=z, X_0=x\} = \mathbb{P}\{X_{m+n}=y \mid X_m=z\}.
+\]
+
+Por homogeneidad temporal:
+\[
+\mathbb{P}\{X_{m+n}=y \mid X_m=z\} = \mathbb{P}\{X_n=y \mid X_0=z\} = p_n(z,y).
+\]
+
+Además, \(\mathbb{P}\{X_m=z \mid X_0=x\} = p_m(x,z)\). Sustituyendo:
+\[
+p_{m+n}(x,y) = \sum_{z\in S} p_m(x,z) p_n(z,y).
+\]
+
+La serie converge porque todos los términos son no negativos y:
+\[
+\sum_{z\in S} p_m(x,z) p_n(z,y) \leq \sum_{z\in S} p_m(x,z) = 1.
+\]
+\end{proof}
+
+\subsection{Demostración del Criterio de Recurrencia/Transiencia}
+
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[
+state/.style={circle, draw, minimum size=9mm, fill=green!5},
+arrow/.style={-{Latex[length=2.7mm]}, thick}
+]
+\node[state, fill=yellow!20] (x) at (0,0) {$x$};
+\node[state] (a) at (2.5,1.4) {};
+\node[state] (b) at (3.0,-1.4) {};
+\node[state] (c) at (5.4,0.2) {};
+\draw[arrow] (x) edge[bend left=20] node[above] {\small retorno} (a);
+\draw[arrow] (a) edge[bend left=20] (x);
+\draw[arrow] (x) edge[bend right=25] node[below] {\small escape} (b);
+\draw[arrow] (b) -- (c);
+\node[draw, rounded corners, fill=green!8, align=left, right=0.8cm of c, text width=5.6cm] {
+\small
+\textbf{Recurrencia:} \(x\) se visita infinitas veces.\\
+\textbf{Transiencia:} el número total de visitas tiene esperanza finita.
+};
+\end{tikzpicture}
+\caption{Bifurcación conceptual entre recurrencia y transiencia.}
+\end{figure}
+
+
+
+\begin{teorema}[Criterio de la serie]
+Una cadena de Markov irreducible es recurrente si y sólo si \(\sum_{n=0}^{\infty} p_n(x,x) = \infty\) para algún (y por tanto cualquier) estado \(x\). Es transitoria si y sólo si la serie converge.
+\end{teorema}
+
+\begin{proof}
+Fijemos un estado \(x\) y supongamos \(X_0 = x\). Definimos:
+\begin{itemize}
+\item \(T_x = \inf\{n \geq 1: X_n = x\}\) (tiempo de primer retorno)
+\item \(q = \mathbb{P}\{T_x < \infty \mid X_0 = x\}\)
+\item \(R = \sum_{n=0}^{\infty} \mathbf{1}_{\{X_n = x\}}\) (número total de visitas a \(x\))
+\end{itemize}
+
+\subsubsection*{Paso 1: Dos expresiones para \(\mathbb{E}[R]\)}
+
+\textbf{Primera expresión (linealidad de la esperanza):}
+\[
+\mathbb{E}[R] = \mathbb{E}\left[\sum_{n=0}^{\infty} \mathbf{1}_{\{X_n = x\}}\right] = \sum_{n=0}^{\infty} \mathbb{P}\{X_n = x \mid X_0 = x\} = \sum_{n=0}^{\infty} p_n(x,x).
+\]
+
+\textbf{Segunda expresión (distribución geométrica):} Sea \(q = \mathbb{P}\{T_x < \infty \mid X_0 = x\}\). Analizamos dos casos:
+
+\emph{Caso 1:} \(q = 1\) (recurrente). Entonces la cadena retorna a \(x\) con probabilidad 1. Por la propiedad fuerte de Markov, después de cada retorno el proceso se reinicia independientemente. Esto implica que la cadena visita \(x\) infinitas veces con probabilidad 1, por lo que \(R = \infty\) casi seguramente y \(\mathbb{E}[R] = \infty\).
+
+\emph{Caso 2:} \(q < 1\) (transitorio). La probabilidad de visitar \(x\) exactamente \(m\) veces (incluyendo la inicial) es:
+\[
+\mathbb{P}\{R = m\} = q^{m-1}(1-q), \quad m \geq 1.
+\]
+Esto se justifica así:
+\begin{itemize}
+\item Para \(R=1\): nunca retorna después del tiempo 0, probabilidad \(1-q\).
+\item Para \(R=m\) con \(m \geq 2\): retorna \(m-1\) veces (cada retorno con probabilidad \(q\) condicionada a haber retornado) y luego no retorna más, probabilidad \(q^{m-1}(1-q)\).
+\end{itemize}
+La esperanza de esta distribución geométrica (comenzando en 1) es:
+\[
+\mathbb{E}[R] = \sum_{m=1}^{\infty} m q^{m-1}(1-q) = \frac{1}{1-q}.
+\]
+
+\subsubsection*{Paso 2: Igualación de las expresiones}
+Igualando ambas expresiones obtenemos:
+\[
+\sum_{n=0}^{\infty} p_n(x,x) = 
+\begin{cases}
+\infty & \text{si } q = 1 \text{ (recurrente)} \\
+\frac{1}{1-q} < \infty & \text{si } q < 1 \text{ (transitorio)}
+\end{cases}
+\]
+
+\subsubsection*{Paso 3: Relación con \(q\)}
+Despejando \(q\) de la segunda expresión:
+\[
+q = 1 - \frac{1}{\sum_{n=0}^{\infty} p_n(x,x)}.
+\]
+Por tanto:
+\begin{itemize}
+\item Si la serie diverge, entonces \(q = 1\) (recurrencia).
+\item Si la serie converge a un valor finito \(C\), entonces \(q = 1 - 1/C < 1\) (transiencia).
+\end{itemize}
+
+\subsubsection*{Paso 4: Irreducibilidad}
+Para una cadena irreducible, la propiedad de recurrencia o transiencia es la misma para todos los estados. Si la serie converge para un estado \(x\), entonces para cualquier otro estado \(y\) existen \(m,n\) tales que \(p_m(x,y) > 0\) y \(p_n(y,x) > 0\). Usando Chapman-Kolmogorov:
+\[
+p_{m+k+n}(y,y) \geq p_m(y,x) p_k(x,x) p_n(x,y).
+\]
+Si \(\sum_k p_k(x,x) < \infty\), entonces \(\sum_k p_{m+k+n}(y,y) < \infty\), luego \(\sum_k p_k(y,y) < \infty\). Análogamente, si la serie diverge para \(x\), diverge para \(y\).
+\end{proof}
+
+\subsection{Demostración del Criterio de la Función Armónica}
+
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[scale=0.95]
+\draw[->] (-0.2,0) -- (5.4,0) node[right] {$x$};
+\draw[->] (0,-0.2) -- (0,3.6) node[above] {$\alpha(x)$};
+\draw[thick, blue] plot[smooth] coordinates {(0.3,3.0) (1.2,2.2) (2.0,1.6) (3.2,0.8) (4.7,0.25)};
+\fill (0.3,3.0) circle (2pt) node[above left] {$\alpha(z)=1$};
+\draw[dashed] (0,3.0) -- (0.3,3.0);
+\draw[dashed] (4.7,0.25) -- (4.7,0);
+\node[align=center] at (2.8,-0.85) {\small Una función armónica no constante captura la probabilidad de\\ \small alcanzar el estado objetivo \(z\) desde otros estados.};
+\end{tikzpicture}
+\caption{Perfil cualitativo de una función armónica.}
+\end{figure}
+
+
+
+\begin{teorema}[Criterio de la función armónica]
+Una cadena irreducible es transitoria si y sólo si existe una función \(\alpha: S \to [0,1]\) no constante que satisface:
+\begin{align}
+&\alpha(z) = 1 \text{ para algún } z \in S, \quad \inf_{x\in S} \alpha(x) = 0, \label{eq:cond1}\\
+&\alpha(x) = \sum_{y\in S} p(x,y)\alpha(y), \quad \forall x \neq z. \label{eq:cond2}
+\end{align}
+En caso recurrente, no existe tal función.
+\end{teorema}
+
+\begin{proof}
+\subsubsection*{Parte 1: Existencia en el caso transitorio}
+Supongamos que la cadena es transitoria. Fijemos un estado \(z\) y definamos:
+\[
+\alpha(x) = \mathbb{P}\{X_n = z \text{ para algún } n \geq 0 \mid X_0 = x\}.
+\]
+
+\emph{Verificación de las propiedades:}
+\begin{itemize}
+\item Claramente \(0 \leq \alpha(x) \leq 1\) y \(\alpha(z) = 1\).
+\item Por transitoriedad, existen estados que nunca visitan \(z\) con probabilidad positiva, luego \(\inf_{x\in S} \alpha(x) = 0\).
+\item Para \(x \neq z\), condicionamos en el primer paso:
+\[
+\begin{aligned}
+\alpha(x) &= \mathbb{P}\{\exists n \geq 1: X_n = z \mid X_0 = x\} \\
+&= \sum_{y\in S} \mathbb{P}\{X_1 = y \mid X_0 = x\} \cdot \mathbb{P}\{\exists n \geq 1: X_n = z \mid X_1 = y, X_0 = x\}.
+\end{aligned}
+\]
+Por la propiedad de Markov, la probabilidad condicionada a \(X_1 = y\) es \(\alpha(y)\). Además, \(\mathbb{P}\{X_1 = y \mid X_0 = x\} = p(x,y)\). Luego:
+\[
+\alpha(x) = \sum_{y\in S} p(x,y) \alpha(y).
+\]
+\end{itemize}
+Por tanto, \(\alpha\) satisface las condiciones requeridas.
+
+\subsubsection*{Parte 2: Implicación de existencia a transitoriedad}
+Supongamos que existe una función \(\alpha\) no constante que satisface \eqref{eq:cond1} y \eqref{eq:cond2}. Demostraremos que la cadena es transitoria.
+
+Sea \(z\) el estado con \(\alpha(z) = 1\). Definimos \(M_n = \alpha(X_n)\). Demostraremos que \(M_n\) es una martingala con respecto a la filtración natural \(\mathcal{F}_n = \sigma(X_0, \ldots, X_n)\).
+
+\emph{Verificación de la propiedad de martingala:}
+\[
+\begin{aligned}
+\mathbb{E}[M_{n+1} \mid \mathcal{F}_n] &= \mathbb{E}[\alpha(X_{n+1}) \mid X_n] \quad \text{(por Markov)} \\
+&= \sum_{y\in S} p(X_n, y) \alpha(y).
+\end{aligned}
+\]
+Si \(X_n \neq z\), por \eqref{eq:cond2} esta suma es \(\alpha(X_n) = M_n\). Si \(X_n = z\), entonces \(p(z,y) = \delta_{zy}\) (pues \(z\) es un punto fijo de la ecuación armónica, lo que implica que desde \(z\) sólo se puede ir a estados con \(\alpha = 1\); pero como \(\inf \alpha = 0\), debe ser que \(z\) es absorbente o la cadena es transitoria). En cualquier caso, la propiedad de martingala se cumple.
+
+Como \(\alpha\) está acotada entre 0 y 1, \(M_n\) es una martingala acotada. Por el teorema de convergencia de martingalas, \(M_n\) converge casi seguramente a una variable aleatoria \(M_\infty\).
+
+\emph{Análisis de la convergencia:}
+Por la propiedad de Markov y la ecuación armónica, si la cadena fuera recurrente, visitaría \(z\) infinitas veces con probabilidad 1. En esas visitas, \(M_n = \alpha(z) = 1\). Por tanto, el límite \(M_\infty\) sería 1 casi seguramente. Pero entonces, por convergencia dominada:
+\[
+\mathbb{E}[M_\infty] = 1 = \lim_{n\to\infty} \mathbb{E}[M_n] = \mathbb{E}[M_0] = \alpha(x_0)
+\]
+para cualquier estado inicial \(x_0\). Esto implicaría \(\alpha(x) = 1\) para todo \(x\), contradiciendo que \(\inf \alpha = 0\) (y por tanto \(\alpha\) no es constante). Luego la cadena no puede ser recurrente, es decir, es transitoria.
+
+\subsubsection*{Parte 3: No existencia en el caso recurrente}
+Si la cadena es recurrente, entonces para cualquier estado \(z\), la función \(\alpha(x) = \mathbb{P}\{\text{alcanzar } z \mid X_0 = x\}\) es idénticamente 1 (por recurrencia). Cualquier otra función armónica no constante llevaría a la contradicción anterior. Por tanto, no existe tal función.
+\end{proof}
+
+\subsection{Demostración del Criterio de Recurrencia Positiva}
+
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[
+state/.style={circle, draw, minimum size=8.5mm, fill=orange!8},
+arrow/.style={-{Latex[length=2.7mm]}, thick}
+]
+\node[state, fill=orange!20] (z) at (0,0) {$z$};
+\node[state] (y1) at (2.0,1.4) {$y_1$};
+\node[state] (y2) at (4.1,0) {$y_2$};
+\node[state] (y3) at (2.0,-1.4) {$y_3$};
+\draw[arrow] (z) -- (y1);
+\draw[arrow] (y1) -- (y2);
+\draw[arrow] (y2) -- (y3);
+\draw[arrow] (y3) -- (z);
+\node[draw, rounded corners, fill=orange!6, right=1.0cm of y2, text width=5.1cm, align=left] {
+\small En un ciclo entre retornos a \(z\),
+\[
+\pi(y)=\frac{\E[\#\text{ visitas a }y]}{\E[\text{longitud del ciclo}]}.
+\]
+};
+\end{tikzpicture}
+\caption{Interpretación regenerativa de la distribución invariante.}
+\end{figure}
+
+
+
+\begin{teorema}[Existencia de distribución invariante]
+Una cadena de Markov irreducible es positiva recurrente si y sólo si existe una distribución de probabilidad \(\pi\) que satisface las ecuaciones de balance:
+\[
+\pi(y) = \sum_{x\in S} \pi(x) p(x,y), \quad \forall y\in S.
+\]
+En tal caso, \(\pi\) es única, \(\pi(x) > 0\) para todo \(x\), y además:
+\[
+\pi(x) = \frac{1}{\mathbb{E}[T_x \mid X_0 = x]}.
+\]
+\end{teorema}
+
+\begin{proof}
+\subsubsection*{Parte 1: De recurrencia positiva a existencia de \(\pi\)}
+Supongamos que la cadena es positiva recurrente. Fijemos un estado \(z\) y definamos los tiempos de retorno a \(z\). Sea \(T_z^{(0)} = 0\) y para \(k \geq 1\):
+\[
+T_z^{(k)} = \inf\{n > T_z^{(k-1)}: X_n = z\}.
+\]
+Por recurrencia positiva, \(\mathbb{E}[T_z^{(1)} \mid X_0 = z] = m_z < \infty\).
+
+Definimos para cada \(y \in S\):
+\[
+\pi(y) = \frac{\mathbb{E}\left[\sum_{n=1}^{T_z^{(1)}} \mathbf{1}_{\{X_n = y\}} \mid X_0 = z\right]}{m_z}.
+\]
+Es decir, \(\pi(y)\) es el número esperado de visitas a \(y\) durante un ciclo completo entre visitas a \(z\), dividido por la duración esperada del ciclo.
+
+\emph{Verificación de que \(\pi\) es una distribución:}
+\begin{itemize}
+\item Por construcción, \(\pi(y) \geq 0\).
+\item Sumando sobre \(y\):
+\[
+\sum_{y\in S} \pi(y) = \frac{\mathbb{E}\left[\sum_{n=1}^{T_z^{(1)}} \sum_{y\in S} \mathbf{1}_{\{X_n = y\}} \mid X_0 = z\right]}{m_z} = \frac{\mathbb{E}[T_z^{(1)} \mid X_0 = z]}{m_z} = 1.
+\]
+\end{itemize}
+
+\emph{Verificación de la ecuación de balance:}
+Para cualquier \(y \in S\):
+\[
+\begin{aligned}
+\pi(y) &= \frac{1}{m_z} \mathbb{E}\left[\sum_{n=1}^{T_z^{(1)}} \mathbf{1}_{\{X_n = y\}} \mid X_0 = z\right] \\
+&= \frac{1}{m_z} \sum_{n=1}^{\infty} \mathbb{P}\{X_n = y, T_z^{(1)} \geq n \mid X_0 = z\}.
+\end{aligned}
+\]
+
+Ahora condicionamos en el estado en el tiempo \(n-1\):
+\[
+\begin{aligned}
+\mathbb{P}\{X_n = y, T_z^{(1)} \geq n \mid X_0 = z\} &= \sum_{x\in S} \mathbb{P}\{X_{n-1} = x, T_z^{(1)} \geq n-1 \mid X_0 = z\} \cdot p(x,y) \\
+&\quad + \text{término para } n=1 \text{ (manejo aparte)}.
+\end{aligned}
+\]
+
+Sumando sobre \(n\) y usando que \(\sum_{n=1}^{\infty} \mathbb{P}\{X_{n-1} = x, T_z^{(1)} \geq n-1 \mid X_0 = z\} = m_z \pi(x)\), obtenemos:
+\[
+\pi(y) = \sum_{x\in S} \pi(x) p(x,y).
+\]
+
+\subsubsection*{Parte 2: De existencia de \(\pi\) a recurrencia positiva}
+Supongamos que existe una distribución de probabilidad \(\pi\) que satisface \(\pi = \pi P\). Demostraremos que la cadena es positiva recurrente.
+
+Primero, por irreducibilidad, \(\pi(x) > 0\) para todo \(x\) (si \(\pi(x) = 0\) para algún \(x\), por la ecuación de balance y la irreducibilidad, todos los estados tendrían medida cero, contradicción).
+
+Definimos \(m_x = \mathbb{E}[T_x \mid X_0 = x]\). Queremos probar que \(m_x < \infty\) para todo \(x\).
+
+Consideramos la cadena aumentada con un estado absorbente en \(x\). Sea \(g(y) = \mathbb{E}[T_x \mid X_0 = y]\) para \(y \neq x\), y \(g(x) = 0\). Por el análisis del primer paso:
+\[
+g(y) = 1 + \sum_{z\neq x} p(y,z) g(z), \quad y \neq x.
+\]
+
+Multiplicamos por \(\pi(y)\) y sumamos sobre \(y \neq x\):
+\[
+\sum_{y\neq x} \pi(y) g(y) = \sum_{y\neq x} \pi(y) + \sum_{y\neq x} \sum_{z\neq x} \pi(y) p(y,z) g(z).
+\]
+
+Usando la ecuación de balance para \(\pi\):
+\[
+\sum_{y\neq x} \pi(y) p(y,z) = \pi(z) - \pi(x) p(x,z).
+\]
+
+Sustituyendo:
+\[
+\sum_{y\neq x} \pi(y) g(y) = (1 - \pi(x)) + \sum_{z\neq x} [\pi(z) - \pi(x) p(x,z)] g(z).
+\]
+
+Reordenando:
+\[
+\sum_{z\neq x} \pi(x) p(x,z) g(z) = 1 - \pi(x).
+\]
+
+Como \(p(x,z) \geq 0\) y \(g(z) \geq 1\) (al menos un paso para volver a \(x\) desde \(z\)), tenemos:
+\[
+\pi(x) \sum_{z\neq x} p(x,z) \cdot 1 \leq 1 - \pi(x) \quad \Rightarrow \quad \pi(x) (1 - p(x,x)) \leq 1 - \pi(x).
+\]
+
+Esto implica:
+\[
+\pi(x) \leq 1 - \pi(x) + \pi(x) p(x,x) \quad \Rightarrow \quad 2\pi(x) \leq 1 + \pi(x) p(x,x).
+\]
+
+De aquí no obtenemos directamente la finitud de \(m_x\). Necesitamos un argumento más refinado.
+
+Usando el teorema de Kac (fórmula de inversión para cadenas de Markov), se tiene:
+\[
+\frac{1}{m_x} = \lim_{n\to\infty} \frac{1}{n} \sum_{k=1}^{n} p_k(x,x) = \pi(x)
+\]
+cuando la cadena es aperiódica. Para el caso general (con periodo), el límite Cesàro de \(p_n(x,x)\) es \(\pi(x)/d\) donde \(d\) es el periodo. En cualquier caso, \(m_x = d/\pi(x) < \infty\) porque \(\pi(x) > 0\). Luego la cadena es positiva recurrente.
+
+\subsubsection*{Parte 3: Unicidad}
+Si \(\pi\) y \(\nu\) son dos distribuciones invariantes, consideramos su diferencia \(\delta = \pi - \nu\). Entonces \(\delta = \delta P\). Aplicando iteradamente, \(\delta = \delta P^n\) para todo \(n\). Por el teorema de convergencia (para cadenas aperiódicas) o usando argumentos de Cesàro, las filas de \(P^n\) tienden a \(\pi\) (o a un múltiplo). Esto fuerza \(\delta = 0\). Para el caso periódico, un argumento similar con promedios de Cesàro muestra la unicidad.
+\end{proof}
+
+
+
+\subsection{Demostración de la Relación \(\mathbb{E}[T_x] = 1/\pi(x)\)}
+
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[
+state/.style={circle, draw, minimum size=8.8mm, fill=cyan!8},
+arrow/.style={-{Latex[length=2.6mm]}, thick}
+]
+\node[state, fill=cyan!18] (x0) at (0,0) {$x$};
+\node[state] (a) at (2.1,1.3) {};
+\node[state] (b) at (4.3,0.2) {};
+\node[state] (c) at (2.4,-1.5) {};
+\node[state, fill=cyan!18] (x1) at (6.1,0) {$x$};
+
+\draw[arrow] (x0) -- (a);
+\draw[arrow] (a) -- (b);
+\draw[arrow] (b) -- (c);
+\draw[arrow] (c) -- (x1);
+
+\draw[decorate, decoration={brace, amplitude=5pt}] (0,-2.0) -- (6.1,-2.0)
+node[midway, below=0.3cm, align=center] {\small longitud media del ciclo \(= \E[T_x\mid X_0=x]\)};
+\node[draw, rounded corners, fill=cyan!6, above=0.8cm of b, text width=4.4cm, align=center] {\small frecuencia estacionaria de visitas\\ \(=\pi(x)\)};
+\end{tikzpicture}
+\caption{Interpretación visual de la fórmula de Kac.}
+\end{figure}
+
+
+
+\begin{teorema}
+Para una cadena de Markov irreducible positiva recurrente con distribución invariante \(\pi\), se cumple:
+\[
+\mathbb{E}[T_x \mid X_0 = x] = \frac{1}{\pi(x)} \quad \forall x \in S,
+\]
+donde \(T_x = \inf\{n \geq 1: X_n = x\}\).
+\end{teorema}
+
+\begin{proof}
+Sea \(m_x = \mathbb{E}[T_x \mid X_0 = x]\). Consideramos la cadena con un estado absorbente en \(x\) y definimos \(g(y) = \mathbb{E}[T_x \mid X_0 = y]\) para \(y \neq x\), con \(g(x) = 0\).
+
+\subsubsection*{Paso 1: Ecuación para \(g\)}
+Condicionando en el primer paso para \(y \neq x\):
+\[
+g(y) = 1 + \sum_{z \neq x} p(y,z) g(z).
+\]
+Esta ecuación refleja que desde \(y\) damos un paso (que cuenta como 1) y luego esperamos el tiempo restante desde el nuevo estado.
+
+\subsubsection*{Paso 2: Relación con \(\pi\)}
+Multiplicamos la ecuación por \(\pi(y)\) y sumamos sobre \(y \neq x\):
+\[
+\sum_{y \neq x} \pi(y) g(y) = \sum_{y \neq x} \pi(y) + \sum_{y \neq x} \sum_{z \neq x} \pi(y) p(y,z) g(z).
+\]
+
+Usamos la ecuación de balance \(\pi(z) = \sum_{y} \pi(y) p(y,z)\) para reescribir el último término:
+\[
+\sum_{y \neq x} \sum_{z \neq x} \pi(y) p(y,z) g(z) = \sum_{z \neq x} \left[ \sum_{y \neq x} \pi(y) p(y,z) \right] g(z) = \sum_{z \neq x} \left[ \pi(z) - \pi(x) p(x,z) \right] g(z).
+\]
+
+Sustituyendo:
+\[
+\sum_{y \neq x} \pi(y) g(y) = (1 - \pi(x)) + \sum_{z \neq x} \pi(z) g(z) - \pi(x) \sum_{z \neq x} p(x,z) g(z).
+\]
+
+Cancelamos \(\sum_{z \neq x} \pi(z) g(z)\) de ambos lados (notar que el lado izquierdo es la misma suma con índice \(y\) en lugar de \(z\)):
+\[
+0 = 1 - \pi(x) - \pi(x) \sum_{z \neq x} p(x,z) g(z).
+\]
+
+Por tanto:
+\[
+\pi(x) \sum_{z \neq x} p(x,z) g(z) = 1 - \pi(x).
+\]
+
+\subsubsection*{Paso 3: Relación entre \(m_x\) y \(g\)}
+Observamos que desde \(x\), el tiempo de primer retorno puede expresarse como:
+\[
+T_x = 1 + \sum_{z \neq x} \mathbf{1}_{\{X_1 = z\}} \cdot T_x^{(z)},
+\]
+donde \(T_x^{(z)}\) es el tiempo para alcanzar \(x\) desde \(z\) (con la misma distribución que \(g(z)\) por homogeneidad). Tomando esperanza condicionada a \(X_0 = x\):
+\[
+m_x = 1 + \sum_{z \neq x} p(x,z) g(z).
+\]
+
+Sustituyendo en la ecuación anterior:
+\[
+\pi(x) (m_x - 1) = 1 - \pi(x) \quad \Rightarrow \quad \pi(x) m_x = 1.
+\]
+
+Luego \(m_x = 1/\pi(x)\).
+
+\subsubsection*{Paso 4: Interpretación}
+Esta relación es intuitiva: en una cadena positiva recurrente, la proporción de tiempo que la cadena pasa en el estado \(x\) es \(\pi(x)\), por lo que el tiempo medio entre visitas sucesivas a \(x\) debe ser \(1/\pi(x)\).
+\end{proof}
+
+\begin{observacion}[Sobre el alcance de las demostraciones]
+Las demostraciones de Chapman--Kolmogorov, del criterio de la serie y de la fórmula \(\E[T_x]=1/\pi(x)\) son esencialmente elementales. En cambio, la caracterización mediante funciones armónicas y la identificación completa entre existencia de una medida invariante y recurrencia positiva suelen presentarse en cursos avanzados apoyándose además en resultados como el teorema fuerte de Markov, la teoría de renovación o la fórmula de Kac.
+\end{observacion}
+
+
+
+
+
+\subsection{Ejemplo Detallado: Caminata Aleatoria en \(\Z^d\)}
+
+Este ejemplo resume una de las dicotomías más importantes de la teoría: la misma regla local de movimiento produce un comportamiento global radicalmente distinto según la dimensión del espacio. La caminata aleatoria simple en \(\Z^d\) parte del origen y, en cada paso, elige uniformemente uno de los \(2d\) vecinos más próximos.
+
+
+\begin{figure}[p]
+\centering
+\begin{tikzpicture}[scale=1.35, >=Latex]
+  \draw[gray!60, line width=0.7pt] (-5.2,0) -- (5.2,0);
+  \foreach \x in {-5,-4,...,5} {
+    \fill[gray!70] (\x,0) circle (2pt);
+    \node[below=5pt] at (\x,0) {\small $\x$};
+  }
+  \draw[blue!70, line width=1.6pt, -{Latex[length=3mm]}]
+    (0,0) -- (1,0) -- (2,0) -- (1,0) -- (0,0) -- (-1,0) -- (0,0) -- (1,0) -- (2,0);
+  \fill[blue!70] (0,0) circle (3pt);
+  \fill[red!75!black] (2,0) circle (3.2pt);
+  \node[above=5pt, blue!70] at (0,0) {\small origen};
+  \node[above=5pt, red!75!black] at (2,0) {\small posición actual};
+\end{tikzpicture}
+\caption{Caminata aleatoria simple en \(\Z\). En una dimensión, el trayecto está obligado a cruzar repetidamente la vecindad del origen.}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\begin{tikzpicture}[scale=1.15, >=Latex]
+  \foreach \x in {-3,-2,...,3} {
+    \draw[gray!35] (\x,-3.2) -- (\x,3.2);
+  }
+  \foreach \y in {-3,-2,...,3} {
+    \draw[gray!35] (-3.2,\y) -- (3.2,\y);
+  }
+  \foreach \x in {-3,-2,...,3} {
+    \foreach \y in {-3,-2,...,3} {
+      \fill[gray!65] (\x,\y) circle (1.8pt);
+    }
+  }
+  \draw[orange!85!black, line width=1.5pt, -{Latex[length=3mm]}]
+    (0,0) -- (1,0) -- (1,1) -- (0,1) -- (0,0) -- (-1,0) -- (-1,-1) -- (0,-1) -- (1,-1) -- (1,0);
+  \fill[blue!70] (0,0) circle (3pt);
+  \fill[red!75!black] (1,0) circle (3.2pt);
+  \node[above left=2pt, blue!70] at (0,0) {\small origen};
+  \node[below right=2pt, red!75!black] at (1,0) {\small posición actual};
+\end{tikzpicture}
+\caption{Caminata aleatoria simple en \(\Z^2\). Aunque hay más rutas para dispersarse, la caminata sigue regresando infinitamente muchas veces al origen.}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\begin{tikzpicture}[scale=1.05, >=Latex]
+  \coordinate (O) at (0,0);
+  \coordinate (ex) at (1.25,0);
+  \coordinate (ey) at (0.75,0.68);
+  \coordinate (ez) at (0,1.35);
+  \foreach \i in {0,1,2} {
+    \foreach \j in {0,1,2} {
+      \draw[gray!28] ($(O)+\i*(ex)+\j*(ey)$) -- ($(O)+\i*(ex)+\j*(ey)+2*(ez)$);
+      \draw[gray!28] ($(O)+\i*(ex)+\j*(ez)$) -- ($(O)+\i*(ex)+\j*(ez)+2*(ey)$);
+      \draw[gray!28] ($(O)+\i*(ey)+\j*(ez)$) -- ($(O)+\i*(ey)+\j*(ez)+2*(ex)$);
+    }
+  }
+  \draw[green!50!black, line width=1.55pt, -{Latex[length=3mm]}]
+    ($(O)+1*(ex)+1*(ey)+1*(ez)$) --
+    ($(O)+2*(ex)+1*(ey)+1*(ez)$) --
+    ($(O)+2*(ex)+2*(ey)+1*(ez)$) --
+    ($(O)+2*(ex)+2*(ey)+2*(ez)$) --
+    ($(O)+2*(ex)+1*(ey)+2*(ez)$);
+  \fill[blue!70] ($(O)+1*(ex)+1*(ey)+1*(ez)$) circle (3pt);
+  \fill[red!75!black] ($(O)+2*(ex)+1*(ey)+2*(ez)$) circle (3.2pt);
+  \node[above left=2pt, blue!70] at ($(O)+1*(ex)+1*(ey)+1*(ez)$) {\small origen};
+  \node[right=2pt, red!75!black] at ($(O)+2*(ex)+1*(ey)+2*(ez)$) {\small posición actual};
+\end{tikzpicture}
+\caption{Representación proyectada de la caminata aleatoria simple en \(\Z^3\). La dimensión extra incrementa las posibilidades de escape y favorece la transiencia.}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[scale=0.9]
+\draw[->] (-0.2,0) -- (6.2,0) node[right] {$n$};
+\draw[->] (0,-0.2) -- (0,3.8) node[above] {$p_n(0,0)$};
+\draw[thick, blue] plot[smooth] coordinates {(0.4,3.2) (1.1,2.1) (2.0,1.55) (3.0,1.2) (4.2,1.0) (5.6,0.85)};
+\draw[thick, red] plot[smooth] coordinates {(0.4,2.5) (1.1,1.7) (2.0,1.2) (3.0,0.9) (4.2,0.7) (5.6,0.58)};
+\draw[thick, green!50!black] plot[smooth] coordinates {(0.4,1.6) (1.1,0.85) (2.0,0.45) (3.0,0.27) (4.2,0.16) (5.6,0.08)};
+\node[blue] at (5.5,1.05) {\small $d=1$};
+\node[red] at (5.5,0.7) {\small $d=2$};
+\node[green!50!black] at (5.15,0.16) {\small $d\ge 3$};
+\end{tikzpicture}
+\caption{Decaimiento cualitativo de \(p_n(0,0)\) según la dimensión.}
+\end{figure}
+
+\begin{teorema}[Recurrencia/transiencia de la caminata simple en \(\Z^d\)]
+La caminata aleatoria simple en \(\Z^d\) es:
+\begin{itemize}
+\item recurrente para \(d=1,2\),
+\item transitoria para \(d\ge 3\).
+\end{itemize}
+\end{teorema}
+
+\begin{proof}
+Aplicamos el criterio de la serie:
+\[
+\sum_{n=0}^{\infty} p_n(0,0).
+\]
+Por simetría, la caminata sólo puede regresar al origen en tiempos pares, así que basta estudiar \(p_{2m}(0,0)\).
+
+\subsubsection*{Caso \(d=1\)}
+En una dimensión, para volver al origen después de \(2m\) pasos necesitamos exactamente \(m\) pasos a la derecha y \(m\) a la izquierda. Por tanto,
+\[
+p_{2m}(0,0)=\binom{2m}{m}\left(\frac12\right)^{2m}.
+\]
+Usando Stirling, \(n!\sim \sqrt{2\pi n}\,n^n e^{-n}\), se obtiene
+\[
+\binom{2m}{m}\sim \frac{2^{2m}}{\sqrt{\pi m}},
+\qquad
+p_{2m}(0,0)\sim \frac{1}{\sqrt{\pi m}}.
+\]
+Como \(\sum_{m\ge1} m^{-1/2}\) diverge, concluimos que
+\[
+\sum_{n=0}^{\infty} p_n(0,0)=\infty,
+\]
+y la caminata en \(\Z\) es recurrente.
+
+\subsubsection*{Caso \(d=2\)}
+Ahora el caminante puede repartir sus \(2m\) pasos entre dos coordenadas. Si \(m_1\) pares de pasos corresponden a la primera coordenada y \(m_2=m-m_1\) a la segunda, el número de trayectorias que vuelven al origen es
+\[
+\sum_{m_1=0}^{m} \frac{(2m)!}{m_1!\,m_1!\,m_2!\,m_2!}.
+\]
+Cada trayectoria tiene probabilidad \((1/4)^{2m}\). El análisis asintótico preciso da
+\[
+p_{2m}(0,0)\sim \frac{1}{\pi m}.
+\]
+Como \(\sum_{m\ge1} m^{-1}\) diverge, la caminata simple en \(\Z^2\) también es recurrente.
+
+\subsubsection*{Caso \(d\ge 3\)}
+En dimensión \(d\), la probabilidad de retorno puede escribirse como
+\[
+p_{2m}(0,0)=
+\sum_{\substack{m_1+\cdots+m_d=m\\ m_i\ge0}}
+\frac{(2m)!}{m_1!^2\cdots m_d!^2}
+\left(\frac{1}{2d}\right)^{2m}.
+\]
+El teorema del límite local muestra que, para \(m\to\infty\),
+\[
+p_{2m}(0,0)\sim C_d\,m^{-d/2},
+\]
+con una constante \(C_d>0\) que depende sólo de la dimensión. Entonces la serie
+\[
+\sum_{m=1}^{\infty} m^{-d/2}
+\]
+converge si y sólo si \(d/2>1\), es decir, si \(d\ge3\). Por tanto,
+\[
+\sum_{n=0}^{\infty} p_n(0,0)<\infty,
+\]
+y la caminata es transitoria.
+
+\subsubsection*{Interpretación geométrica}
+Las tres figuras anteriores condensan la intuición del resultado. En \(\Z\) y \(\Z^2\), aunque la caminata se disperse, el número de trayectorias que la obligan a cruzar de nuevo cerca del origen sigue siendo suficientemente grande como para producir retornos infinitos. En \(\Z^3\) y dimensiones superiores, el espacio disponible crece tanto que la caminata tiene demasiadas maneras de escapar sin volver.
+\end{proof}
+
+
+\end{document}
