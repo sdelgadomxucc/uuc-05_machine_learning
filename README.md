@@ -51,3 +51,4 @@ Este repositorio reúne proyectos, prácticas y notas organizados como una secue
 ## 🏁 Objetivo
 
 Proporcionar una visión integral y aplicada del ecosistema de Ciencia de Datos, facilitando la transición desde conceptos básicos hasta soluciones avanzadas en entornos reales.
+
