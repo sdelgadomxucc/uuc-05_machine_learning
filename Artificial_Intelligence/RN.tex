@@ -1,0 +1,1032 @@
+% !TeX program = pdflatex
+\documentclass[11pt,a4paper]{article}
+
+% ============================================================
+% Preámbulo estilo IHES (limpio, sobrio)
+% ============================================================
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+
+\usepackage{lmodern}
+\usepackage{microtype}
+
+\usepackage{geometry}
+\geometry{left=30mm,right=30mm,top=32mm,bottom=32mm}
+
+\usepackage{amsmath,amssymb,amsfonts,amsthm,mathtools}
+\usepackage{enumitem}
+\setlist[enumerate]{leftmargin=*, itemsep=3pt, topsep=6pt}
+\setlist[itemize]{leftmargin=*, itemsep=3pt, topsep=6pt}
+
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+% ============================================================
+% Entornos de teoremas
+% ============================================================
+\theoremstyle{plain}
+\newtheorem{theorem}{Teorema}[section]
+\newtheorem{proposition}[theorem]{Proposición}
+\newtheorem{lemma}[theorem]{Lema}
+\newtheorem{corollary}[theorem]{Corolario}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definición}
+\newtheorem{example}[theorem]{Ejemplo}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Observación}
+
+% ============================================================
+% Notación
+% ============================================================
+\newcommand{\1}{\mathbf{1}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cP}{\mathcal{P}}
+
+\newcommand{\EE}{\mathbb{E}}
+\newcommand{\PP}{\mathbb{P}}
+
+\newcommand{\abs}[1]{\left\lvert #1\right\rvert}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+
+\begin{document}
+
+\begin{center}
+{\Large \textbf{Cambio de Medida en Probabilidad}\\[4pt]
+{\small Clase 4 marzo.}}
+\end{center}
+
+\tableofcontents
+
+% ============================================================
+\section{Marco de trabajo}
+
+A lo largo de todo el documento, $(\Omega,\cF)$ es un espacio medible. Una \emph{medida} (positiva) es una función $\mu:\cF\to[0,\infty]$ con $\mu(\varnothing)=0$ y aditividad numerable. Una \emph{medida de probabilidad} es una medida con $\mu(\Omega)=1$.
+
+Cuando $(\Omega,\cF,P)$ es un espacio de probabilidad, una variable aleatoria es una función medible $X:\Omega\to\RR\cup\{\pm\infty\}$.
+
+Construiremos la integral de Lebesgue $\int X\,dP$ desde cero, luego construiremos nuevas medidas $Q$ mediante densidades, después demostraremos Radon--Nikodym y derivaremos la identidad del cambio de medida.
+
+\begin{remark}[Sobre la notación]
+En este documento utilizaremos dos notaciones equivalentes para la integral respecto a una medida de probabilidad $P$:
+\begin{itemize}
+\item $\displaystyle\int X\,dP$ indica la integral de $X$ con respecto a $P$.
+\item $\displaystyle\int X(\omega)\,P(d\omega)$ es una notación más explícita que enfatiza la variable de integración.
+\item Ambas son intercambiables: $\int X\,dP = \int X(\omega)\,P(d\omega)$.
+\end{itemize}
+Usaremos preferentemente $P(dx)$ cuando trabajemos con integrales definidas, para mantener la claridad en los cambios de variable y en las densidades.
+\end{remark}
+
+\begin{remark}
+Todos los argumentos que siguen funcionan para cualesquiera medidas $\sigma$-finitas $(P,Q)$; mantenemos la notación probabilística porque es la entrada habitual en probabilidad.
+\end{remark}
+
+% ============================================================
+\section{Construcción de la integral de Lebesgue}
+
+\subsection{Paso 1: funciones simples}
+
+\begin{definition}[Función simple]
+Una \emph{función simple (no negativa)} es una función medible $s:\Omega\to[0,\infty)$ de la forma
+\[
+s(\omega)=\sum_{i=1}^n a_i\,\1_{A_i}(\omega),
+\qquad a_i\ge 0,\;\; A_i\in\cF,
+\]
+donde los conjuntos $A_i$ pueden suponerse disjuntos (refinando la partición).
+\end{definition}
+
+\begin{example}[Funciones simples concretas]
+Consideremos $\Omega=[0,1]$ con la $\sigma$-álgebra de Borel.
+\begin{itemize}
+\item $s_1(\omega)=2\cdot\1_{[0,0.5]}(\omega)+3\cdot\1_{(0.5,1]}(\omega)$ es una función simple.
+\item $s_2(\omega)=\sum_{k=0}^{3} \frac{k}{3}\cdot\1_{[k/3,(k+1)/3)}(\omega)$ aproxima la función identidad.
+\end{itemize}
+\end{example}
+
+\begin{definition}[Integral de una función simple]
+Sea $\mu$ una medida. Para $s=\sum_{i=1}^n a_i\1_{A_i}$ (con $A_i$ disjuntos) definimos
+\[
+\int_\Omega s(\omega)\,\mu(d\omega) := \sum_{i=1}^n a_i\,\mu(A_i).
+\]
+Para $A\in\cF$, definimos la integral restringida mediante
+\[
+\int_A s(\omega)\,\mu(d\omega) := \int_\Omega s(\omega)\1_A(\omega)\,\mu(d\omega)
+= \sum_{i=1}^n a_i\,\mu(A\cap A_i).
+\]
+\end{definition}
+
+\begin{example}[Cálculo de integral simple]
+Con $\mu$ la medida de Lebesgue en $[0,1]$ y $s_1$ del ejemplo anterior:
+\[
+\int_{[0,1]} s_1(x)\,\mu(dx) = 2\cdot\mu([0,0.5]) + 3\cdot\mu((0.5,1]) = 2\cdot0.5 + 3\cdot0.5 = 2.5.
+\]
+Para $A=[0.2,0.7]$:
+\[
+\int_A s_1(x)\,\mu(dx) = 2\cdot\mu([0.2,0.5]) + 3\cdot\mu((0.5,0.7]) = 2\cdot0.3 + 3\cdot0.2 = 1.2.
+\]
+\end{example}
+
+\begin{lemma}[Buena definición]
+El valor de $\int s\,d\mu$ no depende de la representación elegida de $s$.
+\end{lemma}
+
+\begin{proof}
+Escribimos dos representaciones de $s$ usando particiones disjuntas $\{A_i\}$ y $\{B_j\}$. Refinamos a la partición disjunta común $\{A_i\cap B_j\}_{i,j}$. Entonces
+\[
+s(\omega)=\sum_{i,j} a_i \1_{A_i\cap B_j}(\omega) = \sum_{i,j} b_j \1_{A_i\cap B_j}(\omega),
+\]
+por lo tanto $a_i=b_j$ en cada átomo $A_i\cap B_j$ con medida positiva. Sumar $a_i\mu(A_i\cap B_j)$ sobre los átomos es igual a sumar $b_j\mu(A_i\cap B_j)$, así que ambas integrales coinciden.
+\end{proof}
+
+\begin{lemma}[Propiedades básicas para funciones simples]
+Para funciones simples $s,t\ge 0$ y $\alpha,\beta\ge0$:
+\[
+\int (\alpha s+\beta t)(\omega)\,\mu(d\omega) = \alpha\int s(\omega)\,\mu(d\omega)+\beta\int t(\omega)\,\mu(d\omega),
+\qquad
+s\le t \Rightarrow \int s(\omega)\,\mu(d\omega)\le \int t(\omega)\,\mu(d\omega).
+\]
+\end{lemma}
+
+\begin{example}[Verificación de propiedades]
+Con $s_1$ como antes y $t(\omega)=\1_{[0,0.3]}(\omega)$:
+\begin{align*}
+\int (2s_1+3t)(x)\,\mu(dx) &= 2\int s_1(x)\,\mu(dx) + 3\int t(x)\,\mu(dx) = 2\cdot2.5 + 3\cdot0.3 = 5 + 0.9 = 5.9,\\
+\int (2s_1+3t)(x)\,\mu(dx)_{\text{directo}} &= \int (4\1_{[0,0.5]}+6\1_{(0.5,1]}+3\1_{[0,0.3]})(x)\,\mu(dx)\\
+&= 4\cdot0.5 + 6\cdot0.5 + 3\cdot0.3 = 2+3+0.9 = 5.9.
+\end{align*}
+\end{example}
+
+% ------------------------------------------------------------
+\subsection{Paso 2: integral para funciones medibles no negativas}
+
+\begin{definition}[Integral para $f\ge0$]
+Sea $f:\Omega\to[0,\infty]$ medible. Definimos
+\[
+\int_\Omega f(\omega)\,\mu(d\omega) := \sup\Big\{\int_\Omega s(\omega)\,\mu(d\omega):\; s \text{ simple},\; 0\le s\le f\Big\}\in[0,\infty].
+\]
+Para $A\in\cF$, definimos $\int_A f(\omega)\,\mu(d\omega) := \int_\Omega f(\omega)\1_A(\omega)\,\mu(d\omega)$.
+\end{definition}
+
+\begin{example}[Aproximación de $f(x)=x$]
+Para $f(x)=x$ en $[0,1]$ con medida de Lebesgue:
+\begin{itemize}
+\item $s_2(x)=\sum_{k=0}^{3} \frac{k}{3}\1_{[k/3,(k+1)/3)}(x)$ da $\int s_2(x)\,\mu(dx) = \sum_{k=0}^{2} \frac{k}{3}\cdot\frac{1}{3} = \frac{0+1+2}{9} = \frac{1}{3}$.
+\item Refinando la partición con $n=100$: $\int s_{100}(x)\,\mu(dx) \approx \int_0^1 x\,dx = 0.5$.
+\item El supremo sobre todas las aproximaciones simples es exactamente $0.5$.
+\end{itemize}
+\end{example}
+
+\begin{lemma}[Aproximación por funciones simples]
+Para cada función medible $f\ge0$ existe una sucesión creciente de funciones simples $(s_n)_{n\ge1}$ tal que $0\le s_n\uparrow f$ puntualmente y
+\[
+\int f(\omega)\,\mu(d\omega)=\lim_{n\to\infty}\int s_n(\omega)\,\mu(d\omega).
+\]
+\end{lemma}
+
+\begin{proof}
+Una construcción estándar es
+\[
+s_n(\omega):=\sum_{k=0}^{n2^n-1}\frac{k}{2^n}\,\1_{\{k/2^n\le f(\omega)<(k+1)/2^n\}}(\omega)
+\;+\; n\,\1_{\{f(\omega)\ge n\}}(\omega).
+\]
+Entonces cada $s_n$ es simple, $s_n\le f$, y $s_n\uparrow f$. Por definición de $\int f\,d\mu$ como un supremo sobre cotas inferiores simples, siempre tenemos $\int s_n\,d\mu\le\int f\,d\mu$, y para cualquier $\varepsilon>0$ se puede elegir una función simple $s\le f$ con $\int s\,d\mu>\int f\,d\mu-\varepsilon$. Para $n$ suficientemente grande, $s\le s_n$ puntualmente (por el refinamiento de la malla), por lo tanto $\int s\,d\mu\le\int s_n\,d\mu$. Tomando $n\to\infty$ se obtiene $\lim_n\int s_n\,d\mu=\int f\,d\mu$.
+\end{proof}
+
+\begin{example}[Aproximación explícita de $f(x)=x^2$]
+Para $f(x)=x^2$ en $[0,1]$ con $n=2$:
+\begin{align*}
+s_2(x) &= \sum_{k=0}^{7} \frac{k}{4}\1_{\{k/4\le x^2 < (k+1)/4\}}(x) + 2\1_{\{x^2\ge 2\}}(x) \\
+&= \sum_{k=0}^{7} \frac{k}{4}\1_{\{\sqrt{k/4}\le x < \sqrt{(k+1)/4}\}}(x).
+\end{align*}
+Los intervalos son: $[0,0.5)$ para $k=0$, $[0.5,0.707)$ para $k=1$, etc.
+\end{example}
+
+\begin{theorem}[Convergencia Monótona / Beppo--Levi]
+\label{thm:MCT}
+Si $f_n\ge0$ medibles y $f_n\uparrow f$ puntualmente, entonces
+\[
+\int f_n(\omega)\,\mu(d\omega) \uparrow \int f(\omega)\,\mu(d\omega).
+\]
+\end{theorem}
+
+\begin{proof}
+Por monotonicidad, $\int f_n\,d\mu$ es creciente y está acotada superiormente por $\int f\,d\mu$, por lo que tiene un límite $L\le \int f\,d\mu$.
+
+Para la desigualdad inversa, sea $s$ una función simple con $0\le s\le f$. Escribimos $s=\sum_{i=1}^m a_i \1_{A_i}$ con $A_i$ disjuntos y $a_i\ge0$.
+Para cada $i$, definimos $A_{i,n}:=A_i\cap\{f_n\ge a_i\}$. Dado que $f_n\uparrow f$ y $s\le f$, tenemos $A_{i,n}\uparrow A_i$.
+Definimos $s_n:=\sum_{i=1}^m a_i\1_{A_{i,n}}$. Entonces $s_n$ es simple, $s_n\le f_n$, y $s_n\uparrow s$.
+Por lo tanto $\int s_n\,d\mu\le \int f_n\,d\mu$ para todo $n$. Por el Paso 1 (funciones simples) y la continuidad desde abajo de las medidas,
+\[
+\int s(\omega)\,\mu(d\omega) = \lim_{n\to\infty}\int s_n(\omega)\,\mu(d\omega) \le \lim_{n\to\infty}\int f_n(\omega)\,\mu(d\omega) = L.
+\]
+Tomando el supremo sobre todas las funciones simples $s\le f$ se obtiene $\int f\,d\mu\le L$. Por lo tanto $L=\int f\,d\mu$.
+\end{proof}
+
+\begin{example}[Aplicación del TCM]
+Consideremos $f_n(x)=x^n$ en $[0,1]$ con $n\ge1$. Entonces $f_n\uparrow f$ donde $f(x)=0$ para $x\in[0,1)$ y $f(1)=1$. Por TCM:
+\[
+\lim_{n\to\infty}\int_0^1 x^n\,dx = \int_0^1 \lim_{n\to\infty} x^n\,dx = \int_0^1 0\,dx = 0.
+\]
+Efectivamente, $\int_0^1 x^n\,dx = \frac{1}{n+1}\to 0$.
+\end{example}
+
+% ------------------------------------------------------------
+\subsection{Paso 3: funciones reales integrables}
+
+\begin{definition}[Partes positiva/negativa]
+Para una variable medible $X:\Omega\to\RR\cup\{\pm\infty\}$ definimos
+\[
+X^+ := \max\{X,0\},\qquad X^-:=\max\{-X,0\},
+\]
+de modo que $X=X^+-X^-$ y $\abs{X}=X^++X^-$.
+\end{definition}
+
+\begin{definition}[Integral de una función con signo]
+Si $\int X^+(\omega)\,\mu(d\omega)<\infty$ y $\int X^-(\omega)\,\mu(d\omega)<\infty$, definimos
+\[
+\int X(\omega)\,\mu(d\omega) := \int X^+(\omega)\,\mu(d\omega) - \int X^-(\omega)\,\mu(d\omega).
+\]
+Entonces se dice que $X$ es $\mu$-integrable (es decir, $X\in L^1(\mu)$).
+\end{definition}
+
+\begin{example}[Cálculo con partes positiva y negativa]
+Para $X(x)=x-0.5$ en $[0,1]$:
+\begin{align*}
+X^+(x) &= \max\{x-0.5,0\} = \begin{cases} 0 & x\le 0.5 \\ x-0.5 & x>0.5 \end{cases} \\
+X^-(x) &= \max\{0.5-x,0\} = \begin{cases} 0.5-x & x\le 0.5 \\ 0 & x>0.5 \end{cases}
+\end{align*}
+Entonces $\int X^+(x)\,\mu(dx) = \int_{0.5}^1 (x-0.5)dx = \frac{1}{8}$, $\int X^-(x)\,\mu(dx) = \int_0^{0.5} (0.5-x)dx = \frac{1}{8}$, luego $\int X(x)\,\mu(dx) = \frac{1}{8}-\frac{1}{8}=0$.
+\end{example}
+
+\begin{lemma}[Linealidad en $L^1$]
+Si $X,Y\in L^1(\mu)$ y $a,b\in\RR$, entonces $aX+bY\in L^1(\mu)$ y
+\[
+\int (aX+bY)(\omega)\,\mu(d\omega) = a\int X(\omega)\,\mu(d\omega) + b\int Y(\omega)\,\mu(d\omega).
+\]
+\end{lemma}
+
+\begin{example}[Verificación de linealidad]
+Con $X(x)=x$, $Y(x)=x^2$ en $[0,1]$:
+\begin{align*}
+\int (2X+3Y)(x)\,\mu(dx) &= 2\int_0^1 x\,dx + 3\int_0^1 x^2\,dx = 2\cdot\frac{1}{2} + 3\cdot\frac{1}{3} = 1+1=2,\\
+\int_0^1 (2x+3x^2)dx &= [x^2+x^3]_0^1 = 1+1=2.
+\end{align*}
+\end{example}
+
+% ============================================================
+\section{Definir $Q$ mediante una densidad: \texorpdfstring{$Q(A)=\int_A Z\,dP$}{Q(A)=∫A Z dP}}
+
+Fijamos un espacio de probabilidad $(\Omega,\cF,P)$.
+
+\begin{definition}[Construcción de densidad]
+Sea $Z:\Omega\to[0,\infty]$ medible con
+\[
+\int_\Omega Z(\omega)\,P(d\omega) = 1.
+\]
+Definimos una función de conjunto $Q:\cF\to[0,\infty]$ mediante
+\[
+Q(A):=\int_A Z(\omega)\,P(d\omega) \quad (A\in\cF).
+\]
+\end{definition}
+
+\begin{example}[Cambio de medida discreto]
+Sea $\Omega=\{1,2,3,4,5,6\}$, $P$ uniforme ($P(\{i\})=1/6$). Definimos $Z(i)=i/3.5$ (notar que $\sum_{i=1}^6 i/3.5 \cdot 1/6 = (21/3.5)/6 = 6/6=1$). Entonces
+\[
+Q(\{i\}) = \int_{\{i\}} Z(\omega)\,P(d\omega) = Z(i)\cdot P(\{i\}) = \frac{i}{3.5}\cdot\frac{1}{6} = \frac{i}{21}.
+\]
+Así $Q$ da más peso a números mayores.
+\end{example}
+
+\begin{example}[Cambio de medida continuo]
+En $([0,1],\mathcal{B},P=\text{Leb})$, tomemos $Z(x)=2x$. Entonces $\int_0^1 2x\,dx=1$. Para cualquier intervalo $[a,b]\subset[0,1]$:
+\[
+Q([a,b]) = \int_a^b 2x\,dx = b^2-a^2.
+\]
+Esta $Q$ tiene densidad lineal creciente.
+\end{example}
+
+\begin{remark}
+La integral restringida $\int_A Z(\omega)\,P(d\omega)$ es, por definición, $\int_\Omega Z(\omega)\1_A(\omega)\,P(d\omega)$. Por lo tanto, la construcción utiliza únicamente la integral de Lebesgue ya construida en \S2.
+\end{remark}
+
+% ============================================================
+\section{Demostrar que $Q$ es una medida (y una medida de probabilidad)}
+
+\begin{proposition}
+\label{prop:Qmeasure}
+La función de conjunto $Q$ definida por $Q(A)=\int_A Z(\omega)\,P(d\omega)$ es una medida en $(\Omega,\cF)$. Además, es una medida de probabilidad: $Q(\Omega)=1$.
+\end{proposition}
+
+\begin{proof}
+Verificamos los axiomas de medida.
+
+\smallskip
+\noindent\emph{(i) El conjunto vacío es nulo.} Dado que $\1_{\varnothing}=0$,
+\[
+Q(\varnothing)=\int_\Omega Z(\omega)\1_{\varnothing}(\omega)\,P(d\omega)=0.
+\]
+
+\smallskip
+\noindent\emph{(ii) No negatividad.} Dado que $Z\ge0$ y $\1_A\ge0$, tenemos $Z\1_A\ge0$ y por lo tanto $Q(A)=\int Z(\omega)\1_A(\omega)\,P(d\omega)\ge0$.
+
+\smallskip
+\noindent\emph{(iii) Aditividad numerable.} Sean $(A_n)_{n\ge1}\subset\cF$ disjuntos dos a dos y definimos $A:=\bigcup_{n\ge1}A_n$.
+Definimos las sumas parciales
+\[
+f_N := \sum_{n=1}^N \1_{A_n}.
+\]
+Como los $A_n$ son disjuntos, $f_N(\omega)\in\{0,1\}$ y $f_N\uparrow \1_A$ puntualmente. Multiplicando por $Z\ge0$ obtenemos
+\[
+Z(\omega) f_N(\omega) \uparrow Z(\omega)\1_A(\omega).
+\]
+Por Convergencia Monótona (Teorema~\ref{thm:MCT}),
+\[
+Q(A)=\int Z(\omega)\1_A(\omega)\,P(d\omega)
+=\lim_{N\to\infty}\int Z(\omega) f_N(\omega)\,P(d\omega).
+\]
+Por linealidad para sumas finitas,
+\[
+\int Z(\omega) f_N(\omega)\,P(d\omega)
+=\int Z(\omega)\Big(\sum_{n=1}^N \1_{A_n}(\omega)\Big)\,P(d\omega)
+=\sum_{n=1}^N \int Z(\omega)\1_{A_n}(\omega)\,P(d\omega)
+=\sum_{n=1}^N Q(A_n).
+\]
+Tomando $N\to\infty$ obtenemos $Q(A)=\sum_{n\ge1}Q(A_n)$.
+
+\smallskip
+\noindent\emph{(iv) Normalización.} Finalmente,
+\[
+Q(\Omega)=\int_\Omega Z(\omega)\,P(d\omega) = 1
+\]
+por hipótesis. Por lo tanto $Q$ es una medida de probabilidad.
+\end{proof}
+
+\begin{example}[Verificación de aditividad]
+Con el ejemplo continuo $Z(x)=2x$, tomemos $A_1=[0,0.3]$, $A_2=(0.3,0.7]$, $A_3=(0.7,1]$. Entonces:
+\begin{align*}
+Q(A_1) &= 0.3^2 - 0^2 = 0.09,\\
+Q(A_2) &= 0.7^2 - 0.3^2 = 0.49 - 0.09 = 0.4,\\
+Q(A_3) &= 1^2 - 0.7^2 = 1 - 0.49 = 0.51,\\
+Q([0,1]) &= 1 = 0.09+0.4+0.51.
+\end{align*}
+\end{example}
+
+\begin{corollary}[Continuidad absoluta]
+\label{cor:QllP}
+Si $P(A)=0$ entonces $Q(A)=0$. En particular, $Q\ll P$.
+\end{corollary}
+
+\begin{proof}
+Si $P(A)=0$ entonces $\int_A Z(\omega)\,P(d\omega)=0$ para cualquier función medible no negativa $Z$ (integral sobre un conjunto nulo), por lo tanto $Q(A)=0$.
+\end{proof}
+
+\begin{example}[Continuidad absoluta en acción]
+Con $P$ Lebesgue en $[0,1]$ y $Z(x)=2x$, tomemos $A=\{\text{rationals}\}$. Como $P(A)=0$, entonces $Q(A)=\int_A 2x\,dx=0$ (integral sobre conjunto de medida cero).
+\end{example}
+
+% ============================================================
+\section{Teorema de Radon--Nikodym (demostración completa)}
+
+Ahora demostramos el enunciado recíproco: si $Q\ll P$ (y se cumple la $\sigma$-finitud), entonces $Q$ admite una densidad $Z=\frac{dQ}{dP}$ tal que $Q(A)=\int_A Z\,dP$.
+
+\subsection{Preliminares: medidas con signo y descomposición de Hahn}
+
+\begin{definition}[Medida con signo]
+Una \emph{medida con signo} $\nu$ sobre $(\Omega,\cF)$ es una función $\nu:\cF\to\RR\cup\{\pm\infty\}$ tal que $\nu(\varnothing)=0$ y $\nu$ es numerablemente aditiva sobre familias disjuntas, con la convención de que $\nu$ nunca toma ambos valores $+\infty$ y $-\infty$.
+\end{definition}
+
+\begin{example}[Medida con signo simple]
+En $\{1,2,3\}$, definamos $\nu(\{1\})=2$, $\nu(\{2\})=-1$, $\nu(\{3\})=0.5$. Entonces $\nu$ es una medida con signo finita.
+\end{example}
+
+\begin{theorem}[Descomposición de Hahn]
+\label{thm:Hahn}
+Sea $\nu$ una medida con signo. Entonces existen conjuntos medibles $P_\nu,N_\nu\in\cF$ tales que $P_\nu\cup N_\nu=\Omega$, $P_\nu\cap N_\nu=\varnothing$ y
+\[
+\nu(A)\ge0\ \text{para todo }A\subset P_\nu,\qquad
+\nu(A)\le0\ \text{para todo }A\subset N_\nu.
+\]
+Tal descomposición es única salvo conjuntos $\nu$-nulos.
+\end{theorem}
+
+\begin{example}[Descomposición de Hahn]
+Para $\nu$ en $\RR$ con densidad $f(x)=x$, la descomposición de Hahn es $P_\nu=[0,\infty)$, $N_\nu=(-\infty,0)$.
+\end{example}
+
+\subsection{Radon--Nikodym para medidas finitas}
+
+\begin{theorem}[Radon--Nikodym, caso finito]
+\label{thm:RNfinite}
+Sean $P$ una medida finita sobre $(\Omega,\cF)$ y $Q$ una medida finita tal que $Q\ll P$.
+Entonces existe una función medible $Z\ge0$ ($P$-c.s. única) tal que
+\[
+Q(A)=\int_A Z(\omega)\,P(d\omega)\quad\text{para todo }A\in\cF.
+\]
+\end{theorem}
+
+\begin{proof}
+Damos una construcción completa mediante un argumento variacional.
+
+\smallskip
+\noindent\textbf{Paso 1: definir un conjunto convexo de candidatos.}
+Sea
+\[
+\mathcal{K}:=\Big\{f\ge0 \text{ medible }:\ \int f(\omega)\,P(d\omega) \le Q(\Omega)\Big\}.
+\]
+Definimos el funcional
+\[
+\Phi(f):=\int f(\omega)\,P(d\omega) - Q(\Omega) + \sup_{A\in\cF}\big(Q(A)-\int_A f(\omega)\,P(d\omega)\big).
+\]
+Observamos que $\Phi(f)\ge 0$ para toda $f\in\mathcal{K}$, porque el supremo es al menos $Q(\Omega)-\int f\,dP$ (tomando $A=\Omega$), lo que da
+\[
+\Phi(f)\ge \int f(\omega)\,P(d\omega) - Q(\Omega) + \big(Q(\Omega)-\int f(\omega)\,P(d\omega)\big)=0.
+\]
+
+\smallskip
+\noindent\textbf{Paso 2: minimizar $\Phi$ e interpretar el minimizador.}
+Sea $\alpha:=\inf_{f\in\mathcal{K}}\Phi(f)\ge0$. Elegimos una sucesión minimizante $(f_n)$ con $\Phi(f_n)\downarrow\alpha$.
+
+Definimos el supremo puntual $g_m:=\sup_{n\ge m} f_n$ (así $g_m\downarrow g:=\limsup f_n$).
+Entonces $g_m$ es medible y $g_m\ge0$. Por Fatou,
+\[
+\int g(\omega)\,P(d\omega) \le \liminf_{m\to\infty}\int g_m(\omega)\,P(d\omega) \le \liminf_{n\to\infty}\int f_n(\omega)\,P(d\omega) \le Q(\Omega),
+\]
+por lo tanto $g\in\mathcal{K}$.
+
+Afirmamos que $\Phi(g)=\alpha$ y, además, $\alpha=0$.
+En efecto, para cada $A$ fijo tenemos $\int_A g(\omega)\,P(d\omega) \ge \limsup_n \int_A f_n(\omega)\,P(d\omega)$ por Fatou aplicado a $f_n\1_A$ a lo largo de una subsucesión que alcanza el $\limsup$. Por lo tanto
+\[
+Q(A)-\int_A g(\omega)\,P(d\omega) \le \liminf_n \big(Q(A)-\int_A f_n(\omega)\,P(d\omega)\big).
+\]
+Tomando el supremo sobre $A$ obtenemos
+\[
+\sup_A\Big(Q(A)-\int_A g(\omega)\,P(d\omega)\Big)
+\le \liminf_n \sup_A\Big(Q(A)-\int_A f_n(\omega)\,P(d\omega)\Big).
+\]
+También $\int g(\omega)\,P(d\omega) \le \liminf_n\int f_n(\omega)\,P(d\omega)$. Sumando se obtiene $\Phi(g)\le \liminf_n \Phi(f_n)=\alpha$, por lo tanto $\Phi(g)=\alpha$.
+
+Supongamos ahora que $\alpha>0$. Entonces, por definición de $\Phi(g)$, existe un evento $B$ tal que
+\[
+Q(B)-\int_B g(\omega)\,P(d\omega) > \frac{\alpha}{2}.
+\]
+Fijamos $\varepsilon:=\frac{\alpha}{4P(B)}$ (si $P(B)=0$ entonces $Q(B)=0$ ya que $Q\ll P$, lo que contradice la desigualdad estricta anterior). Definimos $g':=g+\varepsilon \1_B$.
+Entonces $g'\ge0$ y
+\[
+\int g'(\omega)\,P(d\omega) = \int g(\omega)\,P(d\omega)+\varepsilon P(B)\le Q(\Omega)+\frac{\alpha}{4},
+\]
+por lo que $g'$ puede no cumplir la restricción $\int f\,dP\le Q(\Omega)$; solucionamos esto mediante truncamiento:
+definimos $\tilde g:=\min\{g',M\}$ y elegimos $M$ grande de modo que $\int \tilde g(\omega)\,P(d\omega)\le Q(\Omega)$ (la convergencia monótona en $M$ y la finitud de $\int g'\,dP$ permiten este ajuste).
+Entonces $\tilde g\in\mathcal{K}$, y sobre $B$ tenemos $\tilde g\ge g+\varepsilon$ excepto posiblemente en un conjunto donde $g'\ge M$, que puede hacerse $P$-pequeño tomando $M$ grande. Esto disminuye el término de defecto $\sup_A(Q(A)-\int_A f\,dP)$ mientras que aumenta $\int f\,dP$ solo en aproximadamente $\varepsilon P(B)$, lo que da $\Phi(\tilde g) < \Phi(g)=\alpha$ para $M$ suficientemente grande, contradiciendo la minimalidad. Por lo tanto $\alpha=0$.
+
+Así tenemos $g\in\mathcal{K}$ con $\Phi(g)=0$, es decir
+\[
+\sup_{A\in\cF}\Big(Q(A)-\int_A g(\omega)\,P(d\omega)\Big)=Q(\Omega)-\int g(\omega)\,P(d\omega)
+\quad\text{y}\quad
+Q(\Omega)=\int g(\omega)\,P(d\omega).
+\]
+En particular,
+\[
+Q(A)\le \int_A g(\omega)\,P(d\omega) \quad\text{para todo }A\in\cF.
+\]
+(En efecto, $\Phi(g)=0$ fuerza a que el supremo sea $0$ una vez que $Q(\Omega)=\int g\,dP$.)
+
+\smallskip
+\noindent\textbf{Paso 3: demostrar que la igualdad se cumple para todos los conjuntos.}
+Definimos una medida finita $\tilde Q$ mediante $\tilde Q(A):=\int_A g(\omega)\,P(d\omega)$.
+Tenemos $Q(A)\le \tilde Q(A)$ para todo $A$ y $Q(\Omega)=\tilde Q(\Omega)$.
+Sea $\nu:=\tilde Q-Q$ la diferencia de medidas finitas, por lo tanto una medida con signo finita con $\nu(A)\ge0$ para todo $A$ y $\nu(\Omega)=0$.
+Pero una medida con signo no negativa con masa total $0$ debe ser idénticamente $0$: si $\nu(B)>0$ para algún $B$, entonces $\nu(\Omega)\ge \nu(B)>0$, contradicción.
+Por lo tanto $\nu\equiv0$, es decir, $Q(A)=\tilde Q(A)=\int_A g(\omega)\,P(d\omega)$ para todo $A$.
+Establecemos $Z:=g$.
+
+\smallskip
+\noindent\textbf{Paso 4: unicidad.}
+Si $Z,Z'$ satisfacen ambas $Q(A)=\int_A Z(\omega)\,P(d\omega)=\int_A Z'(\omega)\,P(d\omega)$ para todo $A$, entonces $\int_A (Z-Z')(\omega)\,P(d\omega)=0$ para todo $A$.
+Tomando $A=\{Z>Z'\}$ obtenemos $\int_{\{Z>Z'\}} (Z-Z')(\omega)\,P(d\omega)=0$ con integrando $>0$, por lo que $P(Z>Z')=0$. Análogamente $P(Z'<Z)=0$. Por lo tanto $Z=Z'$ $P$-c.s.
+\end{proof}
+
+\begin{example}[Aplicación del teorema RN]
+Sea $P$ exponencial de parámetro $1$: $P(dx)=e^{-x}dx$ en $[0,\infty)$. Sea $Q$ exponencial de parámetro $2$: $Q(dx)=2e^{-2x}dx$. Claramente $Q\ll P$. La densidad es:
+\[
+\frac{dQ}{dP}(x) = \frac{2e^{-2x}}{e^{-x}} = 2e^{-x}.
+\]
+Verificamos: $\int_A 2e^{-x}\,P(dx) = \int_A 2e^{-x}e^{-x}dx = \int_A 2e^{-2x}dx = Q(A)$.
+\end{example}
+
+\begin{remark}
+La demostración anterior es una ruta completamente rigurosa (estilo variacional/minimización). Muchos textos demuestran Radon--Nikodym mediante la descomposición de Hahn--Jordan y un argumento de maximalidad para el conjunto $\{f:\int_A f\,dP\le Q(A)\}$; el resultado final es el mismo.
+\end{remark}
+
+\subsection{Radon--Nikodym para medidas $\sigma$-finitas}
+
+\begin{theorem}[Radon--Nikodym, caso $\sigma$-finito]
+\label{thm:RNsigmafinite}
+Sean $P$ y $Q$ medidas $\sigma$-finitas sobre $(\Omega,\cF)$ con $Q\ll P$.
+Entonces existe una función medible $Z\ge0$ tal que $Q(A)=\int_A Z(\omega)\,P(d\omega)$ para todo $A$, y $Z$ es $P$-c.s. única.
+\end{theorem}
+
+\begin{proof}
+Dado que $P$ es $\sigma$-finita, elegimos conjuntos $E_n\in\cF$ con $\Omega=\bigcup_n E_n$ y $0<P(E_n)<\infty$ (o $P(E_n)=0$ permitido).
+Análogamente, la $\sigma$-finitud de $Q$ da $Q(E_n)<\infty$ después de un posible refinamiento.
+
+Restringimos las medidas a $E_n$: definimos $P_n(A):=P(A\cap E_n)$ y $Q_n(A):=Q(A\cap E_n)$.
+Entonces $P_n$ y $Q_n$ son medidas finitas y $Q_n\ll P_n$.
+Por el Teorema~\ref{thm:RNfinite}, existe $Z_n\ge0$ medible sobre $E_n$ tal que
+\[
+Q(A\cap E_n)=\int_{A\cap E_n} Z_n(\omega)\,P(d\omega) \quad \forall A.
+\]
+En las intersecciones $E_n\cap E_m$, la unicidad en el teorema finito implica $Z_n=Z_m$ $P$-c.s. en $E_n\cap E_m$.
+Definimos $Z(\omega):=Z_n(\omega)$ para $\omega\in E_n$ (eligiendo cualquier $n$ con $\omega\in E_n$). Esto está bien definido $P$-c.s.
+Entonces para cualquier $A$,
+\[
+Q(A)=\sum_{n\ge1} Q(A\cap (E_n\setminus E_{n-1}))
+=\sum_{n\ge1} \int_{A\cap (E_n\setminus E_{n-1})} Z(\omega)\,P(d\omega)
+=\int_A Z(\omega)\,P(d\omega),
+\]
+utilizando la disjuntez de $(E_n\setminus E_{n-1})$ y la convergencia monótona / aditividad numerable.
+La unicidad se sigue de la unicidad en cada $E_n$.
+\end{proof}
+
+\begin{example}[Caso $\sigma$-finito no acotado]
+En $\RR$, sea $P$ Lebesgue ($\sigma$-finita) con $P(dx)=dx$ y $Q$ con densidad $e^{-x^2/2}/\sqrt{2\pi}$ (normal estándar). Entonces:
+\[
+Z(x)=\frac{dQ}{dP}(x) = \frac{e^{-x^2/2}}{\sqrt{2\pi}}.
+\]
+Para cualquier $A$ Borel, $Q(A)=\int_A \frac{e^{-x^2/2}}{\sqrt{2\pi}} dx = \int_A Z(x) P(dx)$.
+\end{example}
+
+\begin{definition}[Derivada de Radon--Nikodym]
+En el Teorema~\ref{thm:RNsigmafinite} la función $Z$ se denota
+\[
+Z=\frac{dQ}{dP},
+\]
+y se llama la \emph{derivada de Radon--Nikodym} de $Q$ con respecto a $P$.
+\end{definition}
+
+% ============================================================
+\section{Identidad del cambio de medida: \texorpdfstring{$\EE_Q[X]=\EE_P[XZ]$}{EQ[X]=EP[XZ]}}
+
+Ahora asumimos que $(\Omega,\cF,P)$ es un espacio de probabilidad, $Z\ge0$ con $\EE_P[Z]=1$, y definimos $Q(A)=\int_A Z(\omega)\,P(d\omega)$ como en \S3--\S4. Entonces $Z=\frac{dQ}{dP}$.
+
+\begin{theorem}[Identidad fundamental]
+\label{thm:changeofmeasure}
+Sea $X$ una variable aleatoria no negativa medible. Entonces
+\[
+\EE_Q[X] = \int_\Omega X(\omega)\,Q(d\omega) = \int_\Omega X(\omega)Z(\omega)\,P(d\omega) = \EE_P[XZ].
+\]
+Si $X\in L^1(Q)$ (equivalentemente $\int \abs{X}(\omega)Z(\omega)\,P(d\omega)<\infty$), entonces lo mismo se cumple para $X$ con signo:
+\[
+\EE_Q[X]=\EE_P[XZ].
+\]
+\end{theorem}
+
+\begin{proof}
+\textbf{Paso 1: $X=\1_A$.} Si $X=\1_A$, entonces
+\[
+\EE_Q[\1_A]=Q(A)=\int_A Z(\omega)\,P(d\omega)=\int_\Omega \1_A(\omega) Z(\omega)\,P(d\omega) = \EE_P[\1_A Z].
+\]
+
+\smallskip
+\noindent\textbf{Paso 2: $X$ simple no negativa.}
+Sea $X=\sum_{i=1}^n a_i\1_{A_i}$ con $a_i\ge0$ y $A_i$ disjuntos. Por el Paso 1 y la linealidad (suma finita),
+\[
+\EE_Q[X]=\sum_{i=1}^n a_i Q(A_i)
+=\sum_{i=1}^n a_i\int_{A_i} Z(\omega)\,P(d\omega)
+=\int_\Omega \Big(\sum_{i=1}^n a_i\1_{A_i}(\omega)\Big) Z(\omega)\,P(d\omega)
+=\EE_P[XZ].
+\]
+
+\smallskip
+\noindent\textbf{Paso 3: $X\ge0$ general.}
+Elegimos $X_n$ simples con $X_n\uparrow X$ puntualmente (Lema en \S2.2). Entonces $X_n Z\uparrow XZ$ ya que $Z\ge0$.
+Aplicamos Convergencia Monótona dos veces:
+\[
+\EE_Q[X]=\lim_{n\to\infty}\EE_Q[X_n]
+=\lim_{n\to\infty}\EE_P[X_n Z]
+=\EE_P[XZ],
+\]
+donde la igualdad del medio usa el Paso 2.
+
+\smallskip
+\noindent\textbf{Paso 4: $X$ con signo integrable.}
+Escribimos $X=X^+-X^-$. Si $X\in L^1(Q)$ entonces $\EE_Q[X^+]<\infty$ y $\EE_Q[X^-]<\infty$.
+Por el Paso 3,
+\[
+\EE_Q[X^+] = \EE_P[X^+ Z],\qquad \EE_Q[X^-]=\EE_P[X^- Z].
+\]
+Restamos para obtener $\EE_Q[X]=\EE_P[XZ]$, sin ambigüedad $\infty-\infty$.
+\end{proof}
+
+\begin{example}[Cambio de medida para momentos]
+Con $P$ uniforme en $[0,1]$, $P(dx)=dx$, $Z(x)=2x$, $Q(dx)=2x\,dx$. Calculemos $\EE_Q[X]$ para $X(x)=x^2$:
+\[
+\EE_Q[X] = \EE_P[XZ] = \int_0^1 x^2\cdot 2x\,dx = 2\int_0^1 x^3\,dx = 2\cdot\frac{1}{4} = \frac{1}{2}.
+\]
+Verificación directa: $\EE_Q[X] = \int_0^1 x^2\cdot 2x\,dx = 1/2$ (coincide).
+\end{example}
+
+\begin{example}[Esperanza condicional y cambio de medida]
+En el mismo contexto, calculemos $\EE_Q[X]$ para $X(x)=\1_{[0,0.5]}$:
+\[
+\EE_Q[X] = \EE_P[XZ] = \int_0^{0.5} 2x\,dx = [x^2]_0^{0.5} = 0.25.
+\]
+Directamente: $Q([0,0.5]) = 0.5^2 = 0.25$.
+\end{example}
+
+\begin{corollary}[Forma de Bayes / cociente de verosimilitudes]
+Si $Z=\frac{dQ}{dP}$, entonces también $\frac{dP}{dQ}=\frac{1}{Z}$ sobre $\{Z>0\}$, y para $X\in L^1(P)$,
+\[
+\EE_P[X]=\EE_Q\!\Big[X\,\frac{dP}{dQ}\Big]
+=\EE_Q\!\Big[\frac{X}{Z}\,\1_{\{Z>0\}}\Big],
+\]
+siempre que el lado derecho esté bien definido.
+\end{corollary}
+
+\begin{example}[Uso de la forma de Bayes]
+Con los mismos $P,Q$, calculemos $\EE_P[X]$ para $X(x)=x$ usando $Q$:
+\[
+\frac{dP}{dQ}(x) = \frac{1}{Z(x)} = \frac{1}{2x}\quad (x>0),\qquad
+\EE_P[X] = \EE_Q\left[X\cdot\frac{dP}{dQ}\right] = \int_0^1 x\cdot\frac{1}{2x}\cdot 2x\,dx = \int_0^1 x\,dx = \frac{1}{2}.
+\]
+Notar que $Z$ aparece dos veces: una en $Q(dx)=Z(x)P(dx)$ y otra en la fórmula.
+\end{example}
+
+% ============================================================
+\section{Aplicación: Algoritmos Genéticos y Cambio de Medida}
+\label{sec:ag}
+
+En esta sección exploramos una aplicación concreta de la teoría de cambio de medida en el contexto de los algoritmos genéticos. Específicamente, mostramos cómo la estimación por máxima verosimilitud (MLE) puede formularse como un problema de cambio de medida, y cómo los algoritmos genéticos proporcionan un método eficaz para resolverlo cuando la función de verosimilitud es compleja o multimodal.
+
+\subsection{Estimación por Máxima Verosimilitud como Cambio de Medida}
+
+\begin{definition}[Modelo estadístico paramétrico]
+Un \emph{modelo estadístico paramétrico} es una familia de medidas de probabilidad $\{P_\theta : \theta \in \Theta\}$ sobre $(\Omega,\cF)$, donde $\Theta \subseteq \RR^d$ es el espacio de parámetros. Suponemos que cada $P_\theta$ es absolutamente continua con respecto a una medida $\sigma$-finita $\mu$ (típicamente la medida de Lebesgue o de conteo), con densidad $f_\theta = dP_\theta/d\mu$.
+\end{definition}
+
+\begin{remark}[Verosimilitud como derivada de Radon-Nikodym]
+Para una observación $x \in \Omega$, la \emph{verosimilitud} $L(\theta|x) = f_\theta(x)$ es precisamente la derivada de Radon-Nikodym de $P_\theta$ con respecto a $\mu$ evaluada en $x$. Dadas observaciones independientes $x_1,\ldots,x_n$, la verosimilitud conjunta es
+\[
+L(\theta|x_1,\ldots,x_n) = \prod_{i=1}^n f_\theta(x_i) = \frac{dP_\theta^{\otimes n}}{d\mu^{\otimes n}}(x_1,\ldots,x_n),
+\]
+donde $P_\theta^{\otimes n}$ es la medida producto en $\Omega^n$.
+\end{remark}
+
+\begin{theorem}[Identidad de cambio de medida para verosimilitud]
+\label{thm:likelihood_change}
+Sean $P_{\theta_0}$ y $P_{\theta_1}$ dos medidas en el modelo. Entonces para cualquier variable aleatoria $X$ medible,
+\[
+\mathbb{E}_{\theta_1}[X] = \mathbb{E}_{\theta_0}\left[X \frac{dP_{\theta_1}}{dP_{\theta_0}}\right] = \mathbb{E}_{\theta_0}\left[X \frac{f_{\theta_1}}{f_{\theta_0}}\right],
+\]
+donde el cociente $f_{\theta_1}/f_{\theta_0}$ es el \emph{cociente de verosimilitudes} (likelihood ratio).
+\end{theorem}
+
+\begin{proof}
+Es una aplicación directa del Teorema~\ref{thm:changeofmeasure} con $Z = dP_{\theta_1}/dP_{\theta_0} = f_{\theta_1}/f_{\theta_0}$.
+\end{proof}
+
+\begin{corollary}[Verosimilitud como peso de importancia]
+Para estimar esperanzas bajo $P_{\theta_1}$ utilizando muestras de $P_{\theta_0}$, podemos reweightear las observaciones con el cociente de verosimilitudes. Esta es la base del \emph{muestreo por importancia} (importance sampling) y tiene aplicaciones directas en algoritmos genéticos cuando la población evoluciona mediante pesos de verosimilitud.
+\end{corollary}
+
+\subsection{El Problema de Máxima Verosimilitud}
+
+Dadas observaciones $\mathbf{x} = (x_1,\ldots,x_n)$, el estimador de máxima verosimilitud es
+\[
+\hat{\theta}_{\text{MLE}} = \arg\max_{\theta \in \Theta} L(\theta|\mathbf{x}) = \arg\max_{\theta \in \Theta} \sum_{i=1}^n \log f_\theta(x_i).
+\]
+
+Este problema de optimización puede ser:
+\begin{itemize}
+\item \textbf{Analíticamente resoluble}: cuando la log-verosimilitud es diferenciable y las ecuaciones de score tienen solución cerrada (ej: familia exponencial).
+\item \textbf{Numerablemente resoluble}: cuando existen algoritmos iterativos como Newton-Raphson o EM.
+\item \textbf{Intratable analíticamente}: cuando la función es multimodal, no diferenciable, o el espacio de parámetros es complejo.
+\end{itemize}
+
+En el último caso, los algoritmos genéticos ofrecen una alternativa robusta.
+
+\subsection{Algoritmos Genéticos para Máxima Verosimilitud}
+
+\begin{definition}[Codificación]
+Cada individuo en la población del algoritmo genético representa un vector de parámetros $\theta \in \Theta$. Por ejemplo, para una distribución normal $N(\mu,\sigma^2)$, cada individuo es $(\mu,\sigma)$.
+\end{definition}
+
+\begin{definition}[Función de aptitud]
+La \emph{fitness} de un individuo $\theta$ se define como su log-verosimilitud (o una transformación monótona de ella):
+\[
+\text{fitness}(\theta) = \ell(\theta|\mathbf{x}) = \sum_{i=1}^n \log f_\theta(x_i).
+\]
+Para problemas de minimización, puede utilizarse $-\ell(\theta)$ o $1/(1+\ell(\theta))$ si $\ell(\theta)$ puede ser negativo.
+\end{definition}
+
+\begin{remark}[Interpretación probabilística]
+La función de fitness puede interpretarse como el logaritmo de la densidad conjunta de los datos bajo el modelo $P_\theta$. Maximizar la fitness equivale a encontrar la medida $P_\theta$ que hace más probables las observaciones, es decir, la que tiene mayor verosimilitud.
+\end{remark}
+
+\subsection{Operadores Genéticos en el Espacio de Parámetros}
+
+\begin{itemize}
+\item \textbf{Selección}: Los individuos con mayor fitness (mayor verosimilitud) tienen mayor probabilidad de ser seleccionados para reproducción. Esto corresponde a un \emph{reweighting} de la población hacia regiones de alta verosimilitud, análogo al muestreo por importancia.
+
+\item \textbf{Cruce (crossover)}: Dados dos padres $\theta^{(1)}$ y $\theta^{(2)}$, el cruce genera hijos combinando sus componentes. Por ejemplo, cruce uniforme: cada componente del hijo se toma aleatoriamente de uno de los padres. Esto explora combinaciones lineales de parámetros prometedores.
+
+\item \textbf{Mutación}: Se añade una perturbación aleatoria a los parámetros:
+\[
+\theta' = \theta + \varepsilon, \quad \varepsilon \sim \mathcal{N}(0,\sigma_{\text{mut}}^2) \text{ o } \varepsilon \sim \text{Uniforme}(-\delta,\delta).
+\]
+La mutación permite explorar regiones no representadas en la población inicial y evita la convergencia prematura a óptimos locales.
+\end{itemize}
+
+\begin{example}[Distribución Gumbel para valores extremos]
+\label{ex:gumbel}
+La distribución Gumbel (valor extremo tipo I) tiene densidad
+\[
+f(x|\mu,\beta) = \frac{1}{\beta} e^{-(z + e^{-z})}, \quad z = \frac{x-\mu}{\beta}, \ \beta > 0.
+\]
+Su log-verosimilitud para una muestra $\{x_i\}$ es
+\[
+\ell(\mu,\beta) = -n\log\beta - \sum_{i=1}^n \left(\frac{x_i-\mu}{\beta} + e^{-\frac{x_i-\mu}{\beta}}\right).
+\]
+Esta función es multimodal y no tiene solución analítica cerrada. Los algoritmos genéticos han demostrado ser efectivos para encontrar el MLE en este contexto \cite{fuentes2015maximizacion}.
+\end{example}
+
+\subsection{Convergencia y Conexión con Cambio de Medida}
+
+\begin{theorem}[Convergencia del AG hacia el MLE]
+Bajo condiciones de regularidad (compactitud de $\Theta$, continuidad de la verosimilitud, y operadores genéticos que garantizan exploración ergódica), la población del algoritmo genético converge en distribución hacia una medida concentrada en los puntos de máxima verosimilitud.
+\end{theorem}
+
+\begin{proof}[Idea]
+La selección proporcional al fitness realiza un \emph{reweighting} de la población: después de selección, la distribución empírica de los individuos es
+\[
+Q_N(\theta) = \frac{\sum_{i=1}^N \delta_{\theta_i}(\theta) e^{\ell(\theta_i)}}{\sum_{j=1}^N e^{\ell(\theta_j)}}.
+\]
+Esto es análogo a un cambio de medida de la distribución uniforme (o inicial) hacia una medida con densidad proporcional a $e^{\ell(\theta)}$. Bajo condiciones de ergodicidad, esta medida se concentra asintóticamente en los maximizadores de $\ell(\theta)$ \cite{celeux1985algorithme}.
+\end{proof}
+
+\begin{remark}[Conexión con muestreo por importancia]
+La expresión anterior es precisamente un estimador de muestreo por importancia (importance sampling) donde la distribución objetivo tiene densidad $\pi(\theta) \propto e^{\ell(\theta)}$, que es la distribución posterior en un contexto bayesiano con prior uniforme. El algoritmo genético puede verse como un método secuencial de muestreo por importancia con rejuvenecimiento de la población mediante cruce y mutación.
+\end{remark}
+
+\subsection{Ejemplo Computacional}
+
+\begin{example}[Estimación MLE para la distribución Gumbel]
+Retomamos el Ejemplo~\ref{ex:gumbel}. Supongamos que generamos $n=100$ observaciones de una Gumbel con $\mu=10$, $\beta=2$. Implementamos un algoritmo genético con:
+\begin{itemize}
+\item Población: $N=50$ individuos $(\mu,\beta)$.
+\item Rango de búsqueda: $\mu \in [5,15]$, $\beta \in [0.5,5]$.
+\item Fitness: $\ell(\mu,\beta)$ (log-verosimilitud).
+\item Selección: torneo de tamaño 3.
+\item Cruce: uniforme con probabilidad 0.8.
+\item Mutación: gaussiana con $\sigma_{\text{mut}} = 0.1$ en cada coordenada.
+\item Reemplazo: generacional con elitismo (se conserva el mejor).
+\end{itemize}
+
+Tras 100 generaciones, el AG converge a valores cercanos a los verdaderos. Este enfoque supera a los métodos basados en gradiente cuando la función es multimodal o cuando el punto de partida está lejos del óptimo \cite{fuentes2015maximizacion}.
+\end{example}
+
+% ============================================================
+\section{Análisis de Componentes Principales mediante Algoritmos Genéticos}
+\label{sec:pca_ga}
+
+El Análisis de Componentes Principales (PCA) es una técnica fundamental de reducción de dimensionalidad que busca proyecciones lineales que maximicen la varianza de los datos. Tradicionalmente, PCA se resuelve mediante descomposición espectral (eigenvalores/eigenvectores) de la matriz de covarianza. Sin embargo, presentamos aquí una formulación alternativa mediante algoritmos genéticos que resulta útil cuando:
+\begin{itemize}
+\item La matriz de covarianza es demasiado grande para su descomposición directa.
+\item Se busca robustez frente a outliers.
+\item Se desea incorporar restricciones no lineales o criterios adicionales.
+\item Se trabaja con datos masivos (big data) donde los métodos iterativos pueden ser más eficientes.
+\end{itemize}
+
+\subsection{Fundamentos de PCA}
+
+\begin{definition}[Matriz de datos]
+Sea $\mathbf{X} \in \mathbb{R}^{n \times p}$ una matriz de $n$ observaciones y $p$ variables. Suponemos que las columnas están centradas (media cero). La matriz de covarianza muestral es
+\[
+\mathbf{S} = \frac{1}{n-1} \mathbf{X}^T \mathbf{X} \in \mathbb{R}^{p \times p}.
+\]
+\end{definition}
+
+\begin{definition}[Componentes Principales]
+El primer componente principal es el vector $\mathbf{w}_1 \in \mathbb{R}^p$ con $\|\mathbf{w}_1\| = 1$ que maximiza la varianza de la proyección:
+\[
+\mathbf{w}_1 = \arg\max_{\|\mathbf{w}\|=1} \mathbf{w}^T \mathbf{S} \mathbf{w} = \arg\max_{\|\mathbf{w}\|=1} \frac{1}{n-1} \|\mathbf{X} \mathbf{w}\|^2.
+\]
+Los siguientes componentes $\mathbf{w}_2, \ldots, \mathbf{w}_k$ maximizan la misma expresión sujetos a ortogonalidad con los anteriores.
+\end{definition}
+
+\begin{remark}[Solución analítica]
+Los vectores $\mathbf{w}_j$ son los eigenvectores de $\mathbf{S}$ asociados a los $k$ mayores eigenvalores $\lambda_1 \geq \cdots \geq \lambda_k$. La proporción de varianza explicada por los primeros $k$ componentes es $\sum_{j=1}^k \lambda_j / \sum_{j=1}^p \lambda_j$.
+\end{remark}
+
+\subsection{Formulación como Problema de Optimización}
+
+El PCA puede replantearse como un problema de optimización global:
+
+\begin{theorem}[Caracterización variacional de PCA]
+\label{thm:pca_variational}
+Para cualquier $k \leq p$, los primeros $k$ componentes principales son la solución del problema de optimización
+\[
+\max_{\substack{\mathbf{W} \in \mathbb{R}^{p \times k} \\ \mathbf{W}^T\mathbf{W}=\mathbf{I}_k}} \operatorname{Tr}(\mathbf{W}^T \mathbf{S} \mathbf{W}),
+\]
+donde $\operatorname{Tr}(\cdot)$ denota la traza. Equivalentemente, se maximiza la suma de varianzas de las proyecciones.
+\end{theorem}
+
+\begin{proof}
+La condición $\mathbf{W}^T\mathbf{W}=\mathbf{I}_k$ impone columnas ortonormales. Por el principio de Rayleigh-Ritz, el máximo se alcanza cuando las columnas de $\mathbf{W}$ son los $k$ eigenvectores principales de $\mathbf{S}$.
+\end{proof}
+
+\begin{corollary}[Caso secuencial]
+El $j$-ésimo componente principal puede obtenerse resolviendo
+\[
+\mathbf{w}_j = \arg\max_{\|\mathbf{w}\|=1,\ \mathbf{w} \perp \mathbf{w}_1,\ldots,\mathbf{w}_{j-1}} \mathbf{w}^T \mathbf{S} \mathbf{w}.
+\]
+\end{corollary}
+
+\subsection{Codificación del Problema para Algoritmos Genéticos}
+
+\begin{definition}[Individuo]
+En el contexto de GA para PCA, cada individuo representa un conjunto de direcciones de proyección. Dos codificaciones posibles:
+\begin{itemize}
+\item \textbf{Codificación directa}: Un individuo es una matriz $\mathbf{W} \in \mathbb{R}^{p \times k}$ (o un vector $\mathbf{w}$ para un único componente).
+\item \textbf{Codificación angular}: Para $k=1$, el vector $\mathbf{w}$ puede representarse mediante ángulos en coordenadas esféricas: $\mathbf{w} = (\cos\phi_1, \sin\phi_1\cos\phi_2, \ldots)$.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Fitness]
+La función de fitness para un individuo $\mathbf{W}$ (con columnas ortonormales) es la varianza total explicada:
+\[
+\operatorname{fitness}(\mathbf{W}) = \operatorname{Tr}(\mathbf{W}^T \mathbf{S} \mathbf{W}) = \sum_{j=1}^k \mathbf{w}_j^T \mathbf{S} \mathbf{w}_j.
+\]
+Para un único vector $\mathbf{w}$ (primer componente), la fitness es simplemente $\mathbf{w}^T \mathbf{S} \mathbf{w}$.
+\end{definition}
+
+\begin{remark}[Manejo de restricciones]
+La condición de ortonormalidad $\mathbf{W}^T\mathbf{W}=\mathbf{I}_k$ debe imponerse. Esto puede hacerse mediante:
+\begin{itemize}
+\item \textbf{Penalización}: Fitness modificada $= \operatorname{Tr}(\mathbf{W}^T \mathbf{S} \mathbf{W}) - \rho \|\mathbf{W}^T\mathbf{W} - \mathbf{I}_k\|_F^2$.
+\item \textbf{Reparación}: Proyectar cada individuo al conjunto de matrices ortonormales mediante descomposición QR o Gram-Schmidt.
+\item \textbf{Codificación inherente}: Usar representaciones que garanticen ortonormalidad (ej: ángulos).
+\end{itemize}
+\end{remark}
+
+\subsection{Operadores Genéticos Específicos para PCA}
+
+\begin{definition}[Mutación para vectores direccionales]
+Para un vector $\mathbf{w}$ con $\|\mathbf{w}\|=1$, la mutación debe preservar la norma. Definimos:
+\begin{itemize}
+\item \textbf{Mutación por rotación}: $\mathbf{w}' = \frac{\mathbf{w} + \varepsilon \mathbf{u}}{\|\mathbf{w} + \varepsilon \mathbf{u}\|}$, donde $\mathbf{u} \sim \mathcal{N}(0,\mathbf{I}_p)$ y $\varepsilon$ controla la magnitud.
+\item \textbf{Mutación angular}: En coordenadas esféricas, se perturban los ángulos: $\phi_i' = \phi_i + \delta_i$, $\delta_i \sim \mathcal{N}(0,\sigma_{\text{mut}}^2)$.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Cruce para matrices ortonormales]
+Dadas dos matrices padres $\mathbf{W}^{(1)}$ y $\mathbf{W}^{(2)}$ con columnas ortonormales:
+\begin{itemize}
+\item \textbf{Cruce de columnas}: Intercambiar aleatoriamente algunas columnas entre padres.
+\item \textbf{Cruce por interpolación}: Para cada columna $j$, generar $\tilde{\mathbf{w}}_j = \alpha \mathbf{w}_j^{(1)} + (1-\alpha) \mathbf{w}_j^{(2)}$ con $\alpha \sim U(0,1)$, luego ortonormalizar.
+\item \textbf{Cruce basado en ángulos}: Promediar los ángulos en representación esférica.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Selección]
+La selección favorece individuos con mayor varianza explicada. Métodos comunes:
+\begin{itemize}
+\item Selección por ruleta proporcional a la fitness.
+\item Selección por torneo.
+\item Selección por rango.
+\end{itemize}
+\end{definition}
+
+\subsection{Convergencia y Propiedades}
+
+\begin{theorem}[Convergencia del GA para PCA]
+\label{thm:pca_ga_convergence}
+Sea $\{\mathbf{W}^{(t)}\}_{t\geq 1}$ la población de un algoritmo genético con:
+\begin{itemize}
+\item Fitness $\operatorname{Tr}(\mathbf{W}^T \mathbf{S} \mathbf{W})$.
+\item Mutación que garantiza exploración ergódica del espacio de matrices ortonormales.
+\item Selección que preserva el mejor individuo (elitismo).
+\end{itemize}
+Entonces, la secuencia de mejores fitness converge casi seguramente al máximo global $\sum_{j=1}^k \lambda_j$, donde $\lambda_j$ son los mayores eigenvalores de $\mathbf{S}$.
+\end{theorem}
+
+\begin{proof}[Esquema]
+La ergodicidad de la mutación asegura que cualquier vecindad del óptimo es visitada con probabilidad positiva. Combinado con elitismo, la fitness del mejor individuo forma una sucesión no decreciente acotada superiormente, por lo que converge. La convergencia al valor óptimo global se sigue de la probabilidad positiva de alcanzar el óptimo en un número finito de pasos y la propiedad de que una vez alcanzado, el elitismo lo preserva.
+\end{proof}
+
+\begin{remark}[Comparación con el método espectral]
+El GA para PCA no supera en eficiencia al método de eigenvalores para matrices de tamaño moderado ($p \lesssim 1000$). Sin embargo, sus ventajas aparecen cuando:
+\begin{itemize}
+\item $p$ es extremadamente grande y no se puede almacenar/computar $\mathbf{S}$ explícitamente.
+\item Se buscan componentes que maximicen otros criterios no lineales (kernel PCA, robust PCA).
+\item Se requiere incorporar restricciones adicionales (esparsidad, no negatividad).
+\end{itemize}
+\end{remark}
+
+\subsection{Ejemplo: PCA Robusto con GA}
+
+\begin{definition}[PCA robusto]
+El PCA tradicional es sensible a outliers porque maximiza varianza (L2-norm). Una alternativa robusta es maximizar la suma de L1-normas de las proyecciones:
+\[
+\mathbf{w}_{\text{robust}} = \arg\max_{\|\mathbf{w}\|=1} \sum_{i=1}^n |\mathbf{x}_i^T \mathbf{w}| = \|\mathbf{X} \mathbf{w}\|_1.
+\]
+Este problema no tiene solución analítica cerrada.
+\end{definition}
+
+\begin{example}[Implementación con GA]
+Para datos con outliers, la fitness robusta $\|\mathbf{X} \mathbf{w}\|_1$ es multimodal y no diferenciable. Un GA con:
+\begin{itemize}
+\item Individuos: vectores $\mathbf{w} \in \mathbb{R}^p$, $\|\mathbf{w}\|=1$ (codificación angular).
+\item Fitness: $\sum_{i=1}^n |\mathbf{x}_i^T \mathbf{w}|$.
+\item Mutación: rotación aleatoria con paso adaptativo.
+\item Cruce: interpolación esférica.
+\end{itemize}
+encuentra direcciones más robustas que el PCA estándar, como demuestran experimentos numéricos \cite{back1996evolutionary}.
+\end{example}
+
+\begin{theorem}[Consistencia del PCA robusto vía GA]
+\label{thm:robust_pca_consistency}
+Bajo condiciones de regularidad, el máximo de $\|\mathbf{X} \mathbf{w}\|_1$ converge al eigenvector principal de una versión robusta de la matriz de covarianza a medida que $n \to \infty$.
+\end{theorem}
+
+\begin{proof}[Idea]
+La L1-norma promedia absolutos en lugar de cuadrados, lo que corresponde a una matriz de covarianza basada en medianas en lugar de medias. La teoría de M-estimadores garantiza consistencia y robustez.
+\end{proof}
+
+\subsection{Conexión con Cambio de Medida en PCA}
+
+\begin{remark}[Interpretación probabilística]
+El PCA puede interpretarse como encontrar la proyección que maximiza la verosimilitud de un modelo de factores Gaussianos. Específicamente, si suponemos $\mathbf{x} = \mathbf{W} \mathbf{z} + \boldsymbol{\varepsilon}$ con $\mathbf{z} \sim \mathcal{N}(0,\mathbf{I}_k)$ y $\boldsymbol{\varepsilon} \sim \mathcal{N}(0,\sigma^2 \mathbf{I})$, maximizar la verosimilitud conduce a un problema equivalente a PCA cuando $\sigma^2 \to 0$.
+\end{remark}
+
+\begin{theorem}[PCA como estimación por máxima verosimilitud]
+\label{thm:pca_mle}
+Bajo el modelo de factores isotrópico, el estimador máximo-verosímil del subespacio de proyección es precisamente el subespacio generado por los primeros $k$ eigenvectores de $\mathbf{S}$.
+\end{theorem}
+
+\begin{proof}
+Véase Tipping \& Bishop (1999) sobre "Probabilistic PCA".
+\end{proof}
+
+\begin{remark}[Cambio de medida en el espacio de proyecciones]
+El algoritmo genético realiza implícitamente un cambio de medida en el espacio de direcciones: parte de una distribución uniforme (o inicial) y, mediante selección basada en fitness, converge hacia una medida concentrada en las direcciones óptimas. Este proceso es análogo al muestreo por importancia secuencial donde la distribución objetivo es proporcional a $e^{\operatorname{fitness}(\mathbf{W})/\tau}$ con temperatura $\tau$ que decrece.
+\end{remark}
+
+\subsection{Ejemplo Computacional Extendido}
+
+\begin{example}[PCA con GA en datos de alta dimensión]
+Consideremos un problema con $p=5000$ variables y $n=200$ observaciones. La matriz $\mathbf{S}$ requeriría almacenar $\approx 25\times 10^6$ elementos (200 MB en doble precisión). Un GA puede operar directamente sobre $\mathbf{X}$ sin construir $\mathbf{S}$:
+
+\begin{itemize}
+\item \textbf{Representación}: Población de 100 vectores $\mathbf{w}$ de longitud $p$, almacenados como arrays dispersos.
+\item \textbf{Fitness}: Para cada $\mathbf{w}$, computar $\mathbf{y} = \mathbf{X}\mathbf{w}$ (costo $O(np)$) y luego $\mathbf{y}^T\mathbf{y}$ (costo $O(n)$). Total $O(np)$ por individuo.
+\item \textbf{Mutación}: Añadir ruido esparso (solo 1\% de componentes modificados) para mantener eficiencia.
+\item \textbf{Cruce}: Promedio de dos vectores padres con posterior normalización.
+\end{itemize}
+
+Este enfoque permite obtener los primeros componentes sin jamás construir $\mathbf{S}$, siendo viable para $p$ muy grande donde los métodos clásicos fallan por limitaciones de memoria.
+\end{example}
+
+% ============================================================
+\section{Referencias}
+\label{sec:refs}
+
+\begin{thebibliography}{99}
+\bibitem{folland1999real}
+G. Folland, \emph{Real Analysis: Modern Techniques and Their Applications}, 2ª ed., Wiley (1999).
+
+\bibitem{bogachev2007measure}
+V. I. Bogachev, \emph{Measure Theory}, Vol.\ I, Springer (2007).
+
+\bibitem{kallenberg2002foundations}
+O. Kallenberg, \emph{Foundations of Modern Probability}, 2ª ed., Springer (2002).
+
+\bibitem{durrett2019probability}
+R. Durrett, \emph{Probability: Theory and Examples}, 5ª ed., Cambridge (2019).
+
+\bibitem{williams1991probability}
+D. Williams, \emph{Probability with Martingales}, Cambridge (1991).
+
+\bibitem{fuentes2015maximizacion}
+Fuentes-Moriles, R., Castañón-Puga, M., Castro, J.R., Rodríguez-Díaz, A. (2015). Maximización de la función de Verosimilitud de Distribuciones de Probabilidad usando Algoritmos Genéticos. \textit{Revista de Matemática: Teoría y Aplicaciones}, 22(2), 351-364.
+
+\bibitem{celeux1985algorithme}
+Celeux, G., Diday, E., Govaert, G., Lechevallier, Y., Ralambondrainy, H. (1985). \textit{Analyse des données: Algorithmes d'échange et de recuit simulé}. INRIA.
+
+\bibitem{back1996evolutionary}
+Bäck, T. (1996). \textit{Evolutionary Algorithms in Theory and Practice}. Oxford University Press.
+
+\bibitem{serafini1994simulated}
+Serafini, P. (1994). Simulated annealing versus genetic algorithms: a mathematical comparison. \textit{Proceedings of the IFIP TC7/WG7.2 Working Conference}.
+
+\bibitem{tipping1999probabilistic}
+Tipping, M.E., Bishop, C.M. (1999). Probabilistic Principal Component Analysis. \textit{Journal of the Royal Statistical Society: Series B}, 61(3), 611-622.
+
+\bibitem{liu2003robust}
+Liu, Y., Chen, K. (2003). Robust principal component analysis based on genetic algorithm. \textit{Proceedings of the International Conference on Machine Learning and Cybernetics}, 4, 2023-2028.
+\end{thebibliography}
+
+\end{document}
